@@ -1,0 +1,28 @@
+<documentation title="Compound Namespace Depth">
+    <standard>
+    <![CDATA[
+    Compound namespaces with a depth of more than two MUST NOT be used.
+    ]]>
+    </standard>
+    <code_comparison>
+        <code title="Valid: Max depth of 2.">
+        <![CDATA[
+use _PhpScoper653866602a9e\Vendor\Package\SomeNamespace\{
+    _PhpScoper653866602a9e\SubnamespaceOne\ClassA,
+    _PhpScoper653866602a9e\SubnamespaceOne\ClassB,
+    _PhpScoper653866602a9e\SubnamespaceTwo\ClassY,
+    ClassZ,
+};
+        ]]>
+        </code>
+        <code title="Invalid: Max depth of 3.">
+        <![CDATA[
+use _PhpScoper653866602a9e\Vendor\Package\SomeNamespace\{
+    <em>_PhpScoper653866602a9e\SubnamespaceOne\AnotherNamespace\ClassA,</em>
+    _PhpScoper653866602a9e\SubnamespaceOne\ClassB,
+    ClassZ,
+};
+        ]]>
+        </code>
+    </code_comparison>
+</documentation>

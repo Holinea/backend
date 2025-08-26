@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Holinea · Trouver mon thérapeute</title>
+<style>
+:root{
+  --orange:#f27c5a; --orange-100:#ffe7de;
+  --jaune:#ffd447;
+  --bleu:#15193a; --ink:#1a2234; --muted:#667085;
+  --vert:#90d7bd; --vert-700:#256a56; --vert-100:#e9f7f1;
+  --line:#e9edf0; --bg:#f7faf9; --card:#fff;
+  --radius:18px; --shadow:0 12px 28px rgba(21,25,58,.08)
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:22px auto;padding:0 16px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.header h1{margin:0;font-size:26px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+.btn-primary{background:var(--orange);color:#fff;border-color:transparent}
+.btn-ghost{background:#eef6f3;color:#124236;border-color:#d6efe6}
+
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr}}
+
+.sidebar{background:#fff;border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:var(--shadow)}
+.sidebar h3{margin:0 0 8px}
+.small{color:var(--muted);font-size:13px}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0}
+input[type="checkbox"], input[type="radio"]{transform:translateY(1px)}
+.select, .input{width:100%;height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.sep{height:1px;background:var(--line);margin:12px 0}
+
+.content{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px}
+
+.results{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:900px){.results{grid-template-columns:1fr}}
+.item{display:grid;grid-template-columns:110px 1fr;gap:12px;border:1px solid var(--line);border-radius:16px;padding:12px}
+.item img{width:110px;height:110px;border-radius:14px;object-fit:cover}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.badge{padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-weight:800;background:#f9fafb}
+.badge.green{background:#ecfdf3;border-color:#abefc6;color:#067647}
+.badge.amb{background:#fff7ed;border-color:#fed7aa;color:#b45309}
+.badge.red{background:#fef3f2;border-color:#ffd6d0;color:#b42318}
+.score{font-weight:900;font-size:18px;color:#0a6847}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pill{background:var(--vert-100);color:#0a6847;border:1px solid #cfeee3;border-radius:999px;padding:6px 10px;font-weight:800}
+.pill.gray{background:#f3f4f6;border-color:#e5e7eb;color:#111827}
+
+.kv{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:#475467}
+.kv div{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#f8fafb;border:1px solid var(--line);border-radius:999px}
+
+.hint{color:#475467;font-size:13px}
+.empty{padding:18px;text-align:center;color:#muted}
+footer{margin-top:6px;color:#667085;font-size:12px}
+
+.banner{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px dashed #cbd5e1;border-radius:10px;background:#fff}
+.banner b{font-size:12px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #cbd5e1;border-top-color:#0a6847;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{color:#b42318;font-weight:800}
+.ok{color:#067647;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Trouvez votre thérapeute</h1>
+    <div class="actions">
+      <button class="btn" id="btn-load">🔄 Recharger mes réponses</button>
+      <button class="btn btn-ghost" id="btn-demo">⭐ Charger un exemple</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Filtres / préférences rapides -->
+    <aside class="sidebar">
+      <h3>Préférences</h3>
+      <label class="row"><input type="checkbox" id="f-visio"/> <span>Visio</span></label>
+      <label class="row"><input type="checkbox" id="f-cabinet"/> <span>Cabinet</span></label>
+      <div class="row"><input id="f-ville" class="input" placeholder="Ville (optionnel)"/></div>
+      <div class="row">
+        <select id="f-acc" class="select">
+          <option value="">Type d’accompagnement</option>
+          <option value="autonome">Autonome</option>
+          <option value="semi">Semi-guidé</option>
+          <option value="guide">Guidé par un·e thérapeute</option>
+        </select>
+      </div>
+      <div class="row">
+        <select id="f-budget" class="select">
+          <option value="">Budget max (€/séance)</option>
+          <option>40</option><option>50</option><option>60</option><option>70</option><option>80</option>
+        </select>
+      </div>
+      <div class="sep"></div>
+      <h3>Objectifs clés</h3>
+      <label class="row"><input type="checkbox" class="f-goal" value="sommeil"/> Améliorer le sommeil</label>
+      <label class="row"><input type="checkbox" class="f-goal" value="stress"/> Gérer le stress/émotions</label>
+      <label class="row"><input type="checkbox" class="f-goal" value="douleurs"/> Gérer les douleurs</label>
+      <label class="row"><input type="checkbox" class="f-goal" value="forme"/> Être en forme/énergie</label>
+      <div class="sep"></div>
+      <button class="btn-primary" id="btn-match">Lancer la recommandation</button>
+      <div class="sep"></div>
+      <div class="small">Les recommandations sont indicatives et ne remplacent pas un avis médical. Vos données restent locales à ce prototype.</div>
+    </aside>
+
+    <!-- Contenu -->
+    <main class="content">
+      <div class="card banner" id="banner">
+        <span class="spinner" id="spin" style="display:none"></span>
+        <div>
+          <b id="mode">Mode : API modèle (si disponible)</b>
+          <div class="small">Endpoint : <code id="endpointTxt">http://localhost:8000/api/recommend</code> — fallback heuristique sinon.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Résultats</h3>
+        <div id="kv" class="kv"></div>
+        <div class="results" id="results"></div>
+        <div class="empty" id="empty" style="display:none">Aucun profil ≥ 90 %. Voici les meilleurs résultats disponibles.</div>
+        <div class="hint">Astuce : “Recharger mes réponses” lit <code>localStorage("holinea_form")</code>.</div>
+      </div>
+
+      <div class="card">
+        <h3>Pourquoi ces correspondances ?</h3>
+        <p class="small">
+          En mode API, le score provient du modèle entraîné (<em>holinea_reco</em>). En fallback, un score explicable (0→100) agrège objectifs, symptômes/sommeil, émotionnel,
+          adéquation d’approches, préférences de suivi, mode/lieu, KPI et budget.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <footer>© Holinea — Aligné “médecine douce”, transparence et consentement d’abord.</footer>
+</div>
+
+<script>
+/* ====== Config API ====== */
+const API_ENDPOINT = (localStorage.getItem('holinea_api') || 'http://localhost:8000/api/recommend');
+
+/* ====== Données “thérapeutes” (fallback démo) ====== */
+const THERAPEUTES = [
+  { id:'sophie', nom:'Sophie Martin', ville:'Lyon', visio:true, cabinet:true, prix:60,
+    photo:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&q=80&auto=format&fit=crop',
+    approches:['Naturopathie','EFT','Respiration','Coaching'],
+    specialites:['stress','sommeil','anxiete','alimentation'],
+    objectifs:['forme','sommeil','stress'],
+    priseEnCharge:['douleurs_legere','digestion','peau'],
+    suivi:['semi','guide']
+  },
+  { id:'marc', nom:'Marc Lemaire', ville:'Paris', visio:false, cabinet:true, prix:70,
+    photo:'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=300&q=80&auto=format&fit=crop',
+    approches:['Acupuncture','Massage','MTC'],
+    specialites:['douleurs','tensions','fatigue'],
+    objectifs:['douleurs','forme'],
+    priseEnCharge:['douleurs_forte','sommeil'],
+    suivi:['guide']
+  },
+  { id:'amelie', nom:'Amélie Durant', ville:'Marseille', visio:true, cabinet:true, prix:50,
+    photo:'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=300&q=80&auto=format&fit=crop',
+    approches:['Sophrologie','Hypnose','Cohérence cardiaque'],
+    specialites:['stress','anxiete','peurs','sommeil'],
+    objectifs:['stress','sommeil'],
+    priseEnCharge:['angoisse','ruminations'],
+    suivi:['semi','guide']
+  },
+  { id:'hugo', nom:'Hugo Pereira', ville:'Nantes', visio:true, cabinet:false, prix:55,
+    photo:'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=300&q=80&auto=format&fit=crop',
+    approches:['Réflexologie','Aromathérapie'],
+    specialites:['douleurs','digestif','migraines'],
+    objectifs:['douleurs','forme'],
+    priseEnCharge:['douleurs_moy','digestion'],
+    suivi:['autonome','semi']
+  },
+  { id:'leila', nom:'Leïla Ben Othman', ville:'Lille', visio:true, cabinet:true, prix:65,
+    photo:'https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=300&q=80&auto=format&fit=crop',
+    approches:['Yoga thérapie','Méditation','Respiration'],
+    specialites:['stress','sommeil','fatigue'],
+    objectifs:['forme','sommeil','stress'],
+    priseEnCharge:['fatigue','respiration'],
+    suivi:['autonome','semi','guide']
+  },
+  { id:'ayur', nom:'Anita Rao', ville:'Lyon', visio:true, cabinet:true, prix:75,
+    photo:'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=300&q=80&auto=format&fit=crop',
+    approches:['Ayurvéda','Nutrition','Plantes'],
+    specialites:['alimentation','digestion','peau'],
+    objectifs:['forme','poids'],
+    priseEnCharge:['digestion','peau'],
+    suivi:['semi','guide']
+  }
+];
+
+/* ====== Lecture formulaire (localStorage) ====== */
+const STORAGE_KEY='holinea_form';
+const demoForm = {
+  obj:['forme','sommeil'],
+  pb_sommeil:['endormissement','reveils'],
+  stress_lvl:'6', intensite:'6',
+  douleurs:'oui', douleur_moy:'4', douleur_pic:'7',
+  digestion:'oui', peau:'eczéma',
+  energie:'6',
+  type_acc:'semi',
+  kpi:['energie','sommeil','humeur','douleurs'],
+  freq:'Hebdomadaire',
+  ville:'Lyon',
+  formats:['visio','cabinet'],
+  budget:'60'
+};
+
+/* ====== Utils ====== */
+const $ = s => document.querySelector(s);
+const toInt = v => isNaN(+v)?0:+v;
+const overlap = (a=[],b=[]) => a.filter(x=>b.map(y=>y.toLowerCase()).includes(String(x).toLowerCase()));
+
+/* ====== Fallback heuristique ====== */
+function scoreTherapeute(t, f){
+  let score = 0;
+  const reasons = [];
+  const objMatch = overlap(f.obj||[], t.objectifs||[]);
+  score += Math.round(((f.obj?.length? objMatch.length/f.obj.length : 0) * 25));
+  if(objMatch.length) reasons.push(`Objectifs : ${objMatch.join(', ')}`);
+  let symPts = 0;
+  if((f.pb_sommeil||[]).length>=2 && (t.specialites||[]).includes('sommeil')) { symPts += 8; reasons.push('Prise en charge : sommeil'); }
+  const douAvg = toInt(f.douleur_moy||0);
+  if((t.priseEnCharge||[]).some(tag=>tag.startsWith('douleurs')) || (t.objectifs||[]).includes('douleurs')){
+    symPts += Math.min(8, Math.round(douAvg/10*8));
+    if(douAvg>=3) reasons.push('Prise en charge : douleurs');
+  }
+  if((f.digestion||'')==='oui' && (t.priseEnCharge||[]).includes('digestion')) { symPts += 4; reasons.push('Prise en charge : digestion'); }
+  if((f.peau||'').trim() && (t.priseEnCharge||[]).includes('peau')) { symPts += 3; reasons.push('Prise en charge : peau'); }
+  score += Math.min(25, symPts);
+  const stress = toInt(f.stress_lvl||0), intens = toInt(f.intensite||0);
+  if(stress>=6 && (t.specialites||[]).includes('stress')) { score += 8; reasons.push('Spécialiste stress'); }
+  if(intens>=6 && (t.specialites||[]).includes('anxiete')) { score += 5; reasons.push('Accompagnement anxiété/émotions'); }
+  if((t.approches||[]).some(a=>['Sophrologie','Hypnose','EFT','Respiration','Cohérence cardiaque','Yoga thérapie'].includes(a))) score += 2;
+  let ap = 0;
+  (t.approches||[]).forEach(a=>{ if(['Naturopathie','Acupuncture','Sophrologie','Hypnose','Réflexologie','Ayurvéda','Yoga thérapie','EFT','Respiration','Aromathérapie','MTC'].includes(a)) ap += 2;});
+  score += Math.min(10, ap);
+  if(f.type_acc && (t.suivi||[]).includes(f.type_acc)) { score += 7; reasons.push(`Suivi : ${f.type_acc}`); }
+  if((f.freq||'').toLowerCase().includes('hebdo')) score += 3;
+  const wantsVisio  = $('#f-visio').checked;
+  const wantsCabinet= $('#f-cabinet').checked;
+  if((wantsVisio && t.visio) || (wantsCabinet && t.cabinet)) { score += 3; reasons.push(wantsVisio?'Visio':'Cabinet'); }
+  const villePref = ($('#f-ville').value || f.ville || '').trim();
+  if(villePref && t.ville && t.ville.toLowerCase()===villePref.toLowerCase()) { score += 2; reasons.push(`Proche : ${t.ville}`); }
+  if(overlap(f.kpi||[], ['energie','sommeil','humeur','douleurs']).length>=3) score += 3;
+  if(toInt(f.energie||0)>=6 && (t.objectifs||[]).includes('forme')) score += 2;
+  const budgetSel = $('#f-budget').value || f.budget;
+  if(budgetSel && t.prix<=toInt(budgetSel)) { score += 3; reasons.push(`Budget ≤ ${budgetSel}€`); }
+  if((t.approches||[]).includes('Respiration') && (f.pb_sommeil||[]).length) score += 2;
+  return {score:Math.min(100,Math.round(score)), reasons:[...new Set(reasons)]};
+}
+
+/* ====== Lecture/merge formulaire ====== */
+function readForm(){
+  let f = {};
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) f = JSON.parse(raw) || {}; }catch(e){}
+  const uiGoals = Array.from(document.querySelectorAll('.f-goal:checked')).map(x=>x.value);
+  if(uiGoals.length){ f.obj = Array.from(new Set([...(f.obj||[]), ...uiGoals])); }
+  const acc = $('#f-acc').value; if(acc) f.type_acc = acc;
+  const budget = $('#f-budget').value; if(budget) f.budget = budget;
+  const v = $('#f-ville').value; if(v) f.ville = v;
+  return f;
+}
+
+/* ====== Rendu cartouche thérapeute ====== */
+function cardHTML(t){
+  return `
+    <div class="item">
+      <img src="${t.photo}" alt="${t.nom}"/>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-weight:900">${t.nom}</div>
+          <div class="score">${Math.round(t.compat)}%</div>
+        </div>
+        <div class="badges">
+          <span class="badge">${t.ville||'—'}</span>
+          ${t.visio?'<span class="badge green">Visio</span>':''}
+          ${t.cabinet?'<span class="badge">Cabinet</span>':''}
+          ${t.prix?`<span class="badge">~ ${t.prix}€</span>`:''}
+        </div>
+        <div class="pills">
+          ${(t.approches||[]).slice(0,4).map(a=>`<span class="pill">${a}</span>`).join('')}
+        </div>
+        <div class="small" style="margin-top:6px"><b>Pourquoi :</b> ${(t.reasons||[]).join(' • ')||'Adéquation générale'}</div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn" href="profil-therapeute.html?id=${t.id||'sophie'}" target="_blank">Voir le profil</a>
+          <a class="btn btn-primary" href="agenda-praticien-holinea.v2.html" target="_blank">Prendre RDV</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ====== Résumé KV ====== */
+function renderKV(f){
+  $('#kv').innerHTML = [
+    f.obj?.length ? `Objectifs : ${f.obj.join(' • ')}` : '',
+    (f.pb_sommeil||[]).length ? `Troubles du sommeil : ${f.pb_sommeil.length}` : '',
+    (f.douleur_moy?`Douleurs : ${f.douleur_moy}/10`:''),
+    (f.stress_lvl?`Stress : ${f.stress_lvl}/10`:''),
+    (f.type_acc?`Suivi : ${f.type_acc}`:'')
+  ].filter(Boolean).map(x=>`<div>${x}</div>`).join('');
+}
+
+/* ====== Appel API (modèle) puis fallback ====== */
+async function renderMatches(){
+  const f = readForm();
+  renderKV(f);
+
+  const wantsVisio = $('#f-visio').checked, wantsCab = $('#f-cabinet').checked;
+  const ville = ($('#f-ville').value||'').trim().toLowerCase();
+
+  // Indicateur de chargement
+  $('#spin').style.display = 'inline-block';
+  $('#mode').innerHTML = `Mode : API modèle (<span class="ok">tentative</span>)`;
+  $('#endpointTxt').textContent = API_ENDPOINT;
+
+  try{
+    // On envoie le payload "form" tel qu’attendu par votre backend FastAPI
+    const resp = await fetch(API_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ form: f, top_k: 10 })
+    });
+
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data = await resp.json();
+    // data attendu: {recommendations:[{id,name,score,city,photo,approaches,...,explanations:[]}, ...]}
+    const recos = (data.recommendations||[]).map(r => ({
+      id:r.id || r.practitioner_id || 'sophie',
+      nom:r.name || r.practitioner_name || 'Therapeute',
+      compat: (r.score!=null? r.score*100 : r.compat || 0),
+      photo: r.photo || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&q=80&auto=format&fit=crop',
+      ville: r.city || r.location || '',
+      visio: r.visio ?? true,
+      cabinet: r.cabinet ?? true,
+      prix: r.price || r.prix || '',
+      approches: r.approaches || r.specialties || [],
+      reasons: r.explanations || r.reasons || []
+    }));
+
+    const strong = recos.filter(x=>x.compat>=90);
+    const list = strong.length ? strong : recos.slice(0,3);
+
+    $('#results').innerHTML = list.map(cardHTML).join('');
+    $('#empty').style.display = strong.length? 'none':'block';
+    $('#mode').innerHTML = `Mode : API modèle (<span class="ok">actif</span>)`;
+  } catch(e){
+    // Fallback local
+    $('#mode').innerHTML = `Mode : Fallback heuristique (<span class="err">API indisponible</span>)`;
+    const enriched = THERAPEUTES
+      .filter(t=>{
+        const modeOk = (wantsVisio? t.visio : true) && (wantsCab? t.cabinet : true);
+        const villeOk = ville ? (t.ville||'').toLowerCase()===ville : true;
+        return modeOk && villeOk;
+      })
+      .map(t=>{
+        const {score, reasons} = scoreTherapeute(t, f);
+        return {...t, compat:score, reasons};
+      })
+      .sort((a,b)=>b.compat - a.compat);
+
+    const strong = enriched.filter(x=>x.compat>=90);
+    const list = strong.length ? strong : enriched.slice(0,3);
+    $('#results').innerHTML = list.map(cardHTML).join('');
+    $('#empty').style.display = strong.length? 'none':'block';
+  } finally {
+    $('#spin').style.display = 'none';
+  }
+}
+
+/* ====== Actions ====== */
+$('#btn-load').onclick = renderMatches;
+$('#btn-match').onclick = renderMatches;
+$('#btn-demo').onclick = ()=>{ localStorage.setItem('holinea_form', JSON.stringify(demoForm)); renderMatches(); };
+
+/* Init */
+document.getElementById('endpointTxt').textContent = API_ENDPOINT;
+renderMatches();
+</script>
+</body>
+</html>
