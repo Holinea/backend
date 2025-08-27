@@ -24,6 +24,6 @@ Tu devrais voir ta nouvelle base de données apparaître (holinea).
 
 5. Créer des tables (via Query Tool)
 Clique droit sur ta base (holinea_db) → Query Tool
-Dans le github il y a la base de donnees en format sql a copier et coller dans le Query Tool.
+Dans le github il y a la base de donnees en format sql a copier et coller dans le Query Tool dont le chemin est backend/db.sql.
 
 il y a deja dans le github le fichier credential.php qui se trouve dans le dossier Content, ou vous devez modifier le mot de passe $mdp et y mettre votre mot de passe créé lors de la mise en place de pg Admin, et penser a y mettre le bon nom de la base de donnees.
