@@ -1,0 +1,135 @@
+/* === TOGGLE PILL ========================================================= */
+.toggle-pill{ position:relative; display:grid; place-items:center; margin:18px 0 10px }
+.toggle-pill .pill{
+  position:relative; width:520px; max-width:92vw; height:64px;
+  background:#d8f3e2; border-radius:999px; padding:8px; display:grid;
+  grid-template-columns:1fr 1fr; align-items:center; box-shadow:0 8px 22px rgba(0,0,0,.06);
+}
+.toggle-pill .pill-opt{ z-index:2; text-align:center; font-weight:800; color:#0a1a4a; letter-spacing:.02em; }
+.toggle-pill .pill-opt i{ margin-right:8px }
+.toggle-pill .pill-slider{
+  position:absolute; inset:6px auto 6px 6px; width:calc(50% - 6px); height:auto;
+  background:#8fd2b8; border-radius:999px; transition:transform .25s ease;
+  z-index:1;
+}
+.toggle-radio{ display:none }
+#distance:checked ~ .pill .pill-slider{ transform:translateX(100%) }
+#cabinet:checked  ~ .pill label[for="cabinet"]{ color:#061042 }
+#distance:checked ~ .pill label[for="distance"]{ color:#061042 }
+
+/* === FORM CONTROLS (TOUT SUR UNE LIGNE) ================================== */
+.holinea-search-form .filters-row{
+  display:flex;
+  flex-wrap:nowrap;         /* tout tient sur une seule ligne */
+  gap:40px;                 /* espace entre les éléments */
+  align-items:stretch;
+  justify-content:center;
+  margin-top:18px;
+}
+
+/* chaque champ prend la même largeur; le bouton reste compact */
+.holinea-search-form .select,
+.holinea-search-form .field-localisation{
+  flex:1 1 0;
+  min-width:0;              /* évite que ça déborde */
+  position:relative;
+}
+
+/* champs texte (Spécialité / Approche / Ville/CP) */
+.input-text,
+.input-loc{
+  width:100%;
+  height:52px;
+  padding:0 16px;
+  border:2px solid #cfe6d8;
+  border-radius:20px;
+  background:#fff;
+  font:500 15px/1.3 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  color:#111827;
+}
+.input-text::placeholder,
+.input-loc::placeholder{ color:#94a3b8 }
+
+/* bouton */
+.holinea-search-form .btn-search{
+  flex:0 0 auto;            /* ne s’étire pas */
+  height:52px;
+  padding:0 20px;
+  background:#f37564;
+  color:#fff;
+  border:none;
+  border-radius:30px;
+  font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+  gap:5px;
+  cursor:pointer;
+}
+
+/* === CHAMP VILLE/CP (visible seulement en CABINET) ======================= */
+.field-localisation{ display:none; }
+.holinea-search-form:has(#cabinet:checked)  .field-localisation{ display:block; }
+.holinea-search-form:has(#distance:checked) .field-localisation{ display:none; }
+
+/* Thème visuel selon la modalité */
+.holinea-search-form:has(#cabinet:checked) .input-text,
+.holinea-search-form:has(#cabinet:checked) .input-loc{
+  border-color:#8fd2b8; box-shadow:0 0 0 2px rgba(143,210,184,.12);
+}
+.holinea-search-form:has(#distance:checked) .input-text{
+  border-color:#bfe6d5; box-shadow:0 0 0 2px rgba(191,230,213,.10);
+}
+
+/* === Responsive =========================================================== */
+@media (max-width: 920px){
+  .holinea-search-form .filters-row{ flex-wrap:wrap; }
+  .holinea-search-form .select,
+  .holinea-search-form .field-localisation{
+    flex:1 1 260px;          /* 2 par ligne si possible */
+  }
+  .holinea-search-form .btn-search{
+    flex:1 1 160px;          /* passe à la ligne si besoin */
+  }
+}
+
+@media (max-width: 640px){
+  .toggle-pill .pill{ height:56px }
+  .input-text, .input-loc{ height:50px; }
+  .holinea-search-form .select,
+  .holinea-search-form .field-localisation,
+  .holinea-search-form .btn-search{ flex:1 1 100%; }
+}
+/* Suggestions AJAX pour le champ Ville/CP */
+.suggest{
+    position:absolute; left:0; right:0; top:100%;
+    background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+    margin:6px 0 0; padding:6px; list-style:none; max-height:260px; overflow:auto;
+    box-shadow:0 10px 30px rgba(0,0,0,.08); z-index:20; display:none;
+  }
+  .suggest.show{ display:block; }
+  .suggest li{ padding:10px 12px; border-radius:10px; cursor:pointer; }
+  .suggest li:hover{ background:#f5f7fa; }
+  
+/* --- Tarifs --- */
+.holinea-results .price {
+    color: #ef4444;      /* rouge vif */
+    font-weight: 800;
+    margin-top: 6px;
+    font-size: 15px;
+  }
+  
+  /* --- Expérience --- */
+  .holinea-results .experience {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #6b7280;       /* gris neutre */
+    font-style: italic;   /* italique pour différencier */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .holinea-results .experience i {
+    color: #374151;       /* gris plus foncé pour l’icône */
+  }
+  .spec-chips.approaches{ margin-top:6px; }
+  .chip.approach{ background:#e9f7f2; border-color:#bfe6d5; color:#21544c; }
+    

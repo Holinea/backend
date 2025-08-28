@@ -329,6 +329,158 @@ class Model
         $row = $req->fetch(PDO::FETCH_ASSOC);
         return $row ? $row['id_praticien'] : null;
     }    
+    // === À AJOUTER dans la classe Model (PostgreSQL via PDO) ===
+
+/**
+ * Retourne la liste des spécialités distinctes.
+ * Adaptez le nom de table/colonne si besoin.
+ */
+public function getSpecialites(): array {
+    $sql = "SELECT DISTINCT UNNEST(string_to_array(specialites, ',')) AS s
+            FROM praticien
+            WHERE specialites IS NOT NULL AND specialites <> ''
+            ORDER BY s ASC";
+    $req = $this->bd->query($sql);
+    return array_values(array_filter(array_map('trim', array_column($req->fetchAll(PDO::FETCH_ASSOC),'s'))));
+}
+
+// --- Facette : types d'approche --------------------------------------------
+public function getTypesApproche(): array {
+    // Essaie de lire depuis la DB si la colonne existe, sinon fallback statique.
+    try {
+        $sql = "SELECT DISTINCT TRIM(type_approche) AS approche
+                FROM praticien
+                WHERE type_approche IS NOT NULL AND type_approche <> ''
+                ORDER BY 1;";
+        $rows = $this->bd->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $out = [];
+        foreach ($rows as $r) { if (!empty($r['approche'])) $out[] = $r['approche']; }
+        if ($out) return $out;
+    } catch (\Throwable $e) { /* colonne absente => fallback */ }
+
+    // Fallback (modifie librement cette liste)
+    return ["Énergétique", "Manuelle", "Intégrative", "Prévention", "Coaching"];
+}
+
+// --- Recherche praticiens (filtres & sélection des colonnes nécessaires) ----
+public function rechercherPraticiensSimple(array $filters): array {
+    // Filtres attendus : modalite, specialite, approche, ville_cp, order
+    $where  = ["p.statut_validation = 'valide'"];
+    $params = [];
+
+    if (!empty($filters['modalite'])) {
+        $where[] = "p.mode_consultation = :modalite";
+        $params[':modalite'] = $filters['modalite'];
+    }
+
+    if (!empty($filters['specialite'])) {
+        // match dans la chaîne CSV specialites (insensible à la casse)
+        $where[] = "p.specialites ILIKE :spec";
+        $params[':spec'] = '%'.$filters['specialite'].'%';
+    }
+
+    if (!empty($filters['approche'])) {
+        // n’applique que si la colonne existe
+        try {
+            $this->pdo->query("SELECT p.type_approche FROM praticien p LIMIT 1");
+            $where[] = "p.type_approche ILIKE :approche";
+            $params[':approche'] = '%'.$filters['approche'].'%';
+        } catch (\Throwable $e) { /* ignore si colonne absente */ }
+    }
+
+    if (!empty($filters['ville_cp'])) {
+        // recherche souple : code postal, ville, ou adresse
+        $where[] = "(p.code_postal ILIKE :villecp OR COALESCE(p.ville,'') ILIKE :villecp OR p.adresse_cabinet ILIKE :villecp)";
+        $params[':villecp'] = '%'.$filters['ville_cp'].'%';
+    }
+
+    // Tri
+    $order = "p.taux_satisfaction DESC NULLS LAST,
+              p.annees_experience DESC NULLS LAST,
+              u.nom ASC";
+    if (!empty($filters['order'])) {
+        switch ($filters['order']) {
+            case 'nom':         $order = "u.nom ASC, u.prenom ASC"; break;
+            case 'experience':  $order = "p.annees_experience DESC NULLS LAST, u.nom ASC"; break;
+            case 'tarif_min':   $order = "NULLIF(regexp_replace(p.tarifs_consultation, '\\D', '', 'g'), '')::int ASC NULLS LAST, u.nom ASC"; break;
+            case 'tarif_max':   $order = "NULLIF(regexp_replace(p.tarifs_consultation, '\\D', '', 'g'), '')::int DESC NULLS LAST, u.nom ASC"; break;
+            default: /* garde l’ordre par défaut */ break;
+        }
+    }
+
+    // Sélection : toutes les colonnes utiles à la vue
+    $sql = "
+        SELECT
+            p.id_praticien,
+            p.mode_consultation,
+            p.adresse_cabinet,
+            p.code_postal,
+            COALESCE(p.ville, '') AS ville,               -- ajoute la colonne en base si possible
+            p.photo_profil_url,
+            p.specialites,
+            p.description,
+            p.tarifs_consultation,
+            p.annees_experience,
+            p.taux_satisfaction,
+            p.diplomes,
+            /* colonne optionnelle -> renvoyée si elle existe, sinon NULL */
+            " . (function_exists('pg_parameter_status') ? "" : "") . "
+            NULL::int AS nb_avis,
+            " . (/* essaye d'inclure type_approche si présent */ "
+            (SELECT CASE WHEN EXISTS (
+                SELECT 1 FROM information_schema.columns
+                 WHERE table_name='praticien' AND column_name='type_approche'
+            ) THEN p.type_approche ELSE NULL END
+            ) AS type_approche
+            ") . ",
+            u.nom, u.prenom, u.mail, u.telephone_
+        FROM praticien p
+        JOIN utilisateur u ON u.id_utilisateur = p.id_utilisateur
+        " . (count($where) ? "WHERE ".implode(" AND ", $where) : "") . "
+        ORDER BY $order
+        LIMIT 50;
+    ";
+
+    $stmt = $this->bd->prepare($sql);
+    foreach ($params as $k => $v) {
+        $stmt->bindValue($k, $v, PDO::PARAM_STR);
+    }
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
     
+// Model.php
+public function searchCommunes(string $term, int $limit = 10): array
+{
+    // IMPORTANT : avec PDO pgsql, on n'utilise PAS $1/$2 → utiliser ? ou :named
+    $isCp = preg_match('/^\d{2,5}$/', $term) === 1;
+
+    if ($isCp) {
+        $sql = "SELECT code_postal, nom_commune
+                FROM commune
+                WHERE code_postal LIKE :t || '%'
+                ORDER BY code_postal, nom_commune
+                LIMIT :lim";
+    } else {
+        $sql = "SELECT code_postal, nom_commune
+                FROM commune
+                WHERE LOWER(nom_commune) LIKE '%' || LOWER(:t) || '%'
+                   OR code_postal LIKE :t || '%'
+                ORDER BY code_postal, nom_commune
+                LIMIT :lim";
+    }
+
+    // ⚠️ Utilise le bon handle PDO de TA classe (souvent $this->pdo)
+    $pdo = $this->bd; // au cas où ton modèle s'appelle $pdo
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':t', $term, PDO::PARAM_STR);
+    $stmt->bindValue(':lim', (int)$limit, PDO::PARAM_INT); // LIMIT doit être un entier
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
 
 }

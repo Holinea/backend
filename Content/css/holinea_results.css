@@ -1,0 +1,151 @@
+/* holinea_results.css — Card UI for practitioner results */
+/* Fond global de la plateforme */
+body {
+  background-color: #f7f4ed;
+}
+
+
+:root{
+    --ink:#0b1537; --muted:#6b7280; --line:#e5e7eb;
+    --chip:#eef2ff; --chip-ink:#14215a;
+    --accent:#f37564; --green:#16a34a; --pill:#d8f3e2; --pill-2:#8fd2b8;
+    --bgcard:#ffffff; --shadow:0 8px 22px rgba(0,0,0,.06);
+  }
+  
+  .holinea-results{ max-width:1180px; margin:12px auto 36px; padding:0 16px; }
+  .results-header{ display:flex; align-items:center; gap:10px; margin-bottom:14px; position:sticky; top:0; background:transparent; z-index:3; }
+  .results-header h2{ margin:0; font-size:22px; color:var(--ink); }
+  .results-header .chip{ background:var(--chip); color:var(--chip-ink); padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #dbe0ff }
+  .results-header .filters-recap{ display:flex; gap:8px; flex-wrap:wrap }
+  .results-header .close{ margin-left:auto; font-size:26px; text-decoration:none; color:#9aa2b1; }
+  
+  .cards-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
+  
+  .pro-card{
+    background:var(--bgcard); border:1px solid #efe7d9; border-radius:18px;
+    box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; gap:12px;
+  }
+  
+  .pro-head{ display:flex; gap:12px; align-items:center }
+  .avatar{ width:64px; height:64px; border-radius:50%; overflow:hidden; background:#f0f2f5; flex:0 0 auto; display:grid; place-items:center }
+  .avatar img{ width:100%; height:100%; object-fit:cover }
+  .avatar-fallback{ color:#98a2b3; font-size:24px }
+  
+  .id-block .name{ color:var(--ink); font-weight:800; text-decoration:none }
+  .spec-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
+  .chip{ background:#e7f3ec; color:#0b1537; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #bfe3d0 }
+  .chip.spec{ background:#e7f3ec; }
+  .chip.muted{ background:#f3f4f6; border-color:#e5e7eb; color:#4b5563 }
+  
+  .desc{ color:#374151; margin:6px 0 2px; font-size:14px; }
+  
+  .meta-line{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:#4b5563; font-size:13px }
+  .meta-line .rating{ color:#f59e0b; font-weight:700 }
+  .meta-line .rating i{ margin-right:6px }
+  .meta-line .place i{ margin-right:6px; color:#dc2626 }
+  .meta-line .sep{ margin:0 6px; color:#9aa2b1 }
+  
+  .price-and-tags{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .price{ color:#ef4444; font-weight:800 }
+  
+  .diplomes{ font-size:13px; color:#6b7280; }
+  .diplomes .label{ color:#9ca3af }
+  
+  .video-placeholder{ height:120px; border:1.5px dashed #e2e8f0; border-radius:14px; display:grid; place-items:center; background:#fafafa }
+  .video-placeholder .play{ width:44px; height:44px; border-radius:999px; border:none; background:#fff; box-shadow:var(--shadow); display:grid; place-items:center; cursor:pointer }
+  .video-placeholder .play i{ color:#ef4444 }
+  
+  .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px }
+  .btn{ border-radius:12px; padding:10px 14px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; justify-content:center }
+  .btn.ghost{ border:1px solid #cbd5e1; color:#0f172a; background:#fff }
+  .btn.primary{ background:#0b1537; color:#fff }
+  .btn.soft{ background:#fde7e2; color:#7a241a }
+  /* --- Reveal on scroll & tilt --- */
+.holinea-results .pro-card{
+  transform: perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(0);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.holinea-results .pro-card.enter{ animation: cardEnter .5s ease both; }
+@keyframes cardEnter{
+  from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); }
+}
+.holinea-results .pro-card.hover{
+  box-shadow: 0 16px 40px rgba(0,0,0,.12);
+  border-color:#ecdcc5;
+}
+
+/* --- Ripple --- */
+.holinea-results .btn{ position:relative; overflow:hidden; }
+.holinea-results .btn .ripple{
+  position:absolute; border-radius:50%; transform:scale(0); background:rgba(255,255,255,.35);
+  animation:rip .5s ease-out; pointer-events:none;
+}
+@keyframes rip{ to{ transform:scale(2.4); opacity:0; } }
+
+/* --- Fav (heart) --- */
+.holinea-results .fav-btn{
+  position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%;
+  border:1px solid #ffe1db; background:#fff; display:grid; place-items:center; cursor:pointer;
+  color:#f37564; box-shadow:0 8px 22px rgba(0,0,0,.06);
+}
+.holinea-results .fav-btn.active{ background:#f37564; color:#fff; border-color:#f37564; }
+.holinea-results .pro-card{ position:relative; }
+
+/* --- Description clamp + bouton --- */
+.holinea-results .desc.clamp{
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+.holinea-results .read-more{
+  margin-top:-4px; background:transparent; border:none; color:#0b1537; font-weight:700; cursor:pointer;
+}
+
+/* --- Play button animation --- */
+.holinea-results .video-placeholder .play{ transition: transform .15s ease; }
+.holinea-results .video-placeholder .play.pulse{ transform: scale(1.06); }
+.holinea-results .video-placeholder .play.playing i{ color:#16a34a; }
+/* === Interactions JS ==================================================== */
+
+/* 1) reveal au scroll + tilt 3D soft */
+.pro-card{
+  position:relative;
+  transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(0);
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, opacity .25s ease;
+  opacity:0;
+}
+.pro-card.enter{ opacity:1; animation:cardEnter .5s ease both; }
+@keyframes cardEnter{ from{ transform:translateY(10px); } to{ transform:translateY(0); } }
+.pro-card.hover{ box-shadow:0 16px 40px rgba(0,0,0,.12); border-color:#ecdcc5; }
+
+/* 2) ripple sur les boutons */
+.btn{ position:relative; overflow:hidden; }
+.btn .ripple{
+  position:absolute; border-radius:50%; transform:scale(0);
+  background:rgba(255,255,255,.35); animation:rip .5s ease-out; pointer-events:none;
+}
+@keyframes rip{ to{ transform:scale(2.4); opacity:0; } }
+
+/* 3) bouton favori (cœur) */
+.fav-btn{
+  position:absolute; top:10px; right:10px; width:34px; height:34px;
+  border-radius:50%; border:1px solid #ffe1db; background:#fff;
+  display:grid; place-items:center; cursor:pointer; color:#f37564;
+  box-shadow:0 8px 22px rgba(0,0,0,.06);
+}
+.fav-btn.active{ background:#f37564; color:#fff; border-color:#f37564; }
+
+/* 4) clamp + bouton “Lire plus” pour la description */
+.desc.clamp{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.read-more{
+  margin-top:-4px; background:transparent; border:none; color:#0b1537;
+  font-weight:700; cursor:pointer;
+}
+
+/* 5) bouton play animé */
+.video-placeholder .play{ transition:transform .15s ease; }
+.video-placeholder .play.pulse{ transform:scale(1.06); }
+.video-placeholder .play.playing i{ color:#16a34a; }
+
+/* 6) accessibilité motion */
+@media (prefers-reduced-motion:reduce){
+  .pro-card, .btn .ripple, .video-placeholder .play { transition:none !important; animation:none !important; }
+}

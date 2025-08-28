@@ -55,7 +55,7 @@
             </label>
         </div>
         <div class="signup-buttons">
-            <a href="?controller=connection&action=login" class="signup-btn signup-btn-light">Déjà un compte ?</a>
+            <a href="?Controller=connexion&action=login" class="signup-btn signup-btn-light">Déjà un compte ?</a>
             <button type="submit" class="signup-btn signup-btn-main">Créer mon compte</button>
         </div>
         <p class="signup-note">* Champs obligatoires</p>

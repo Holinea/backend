@@ -1,35 +1,55 @@
 <?php
-
-class Controller_recherche extends Controller {
-    public function action_recherche() {
-        $modalite     = $_POST['modalite']     ?? $_GET['modalite']     ?? 'cabinet';
-        $specialites  = trim($_POST['specialites']  ?? $_GET['specialites']  ?? '');
-        $code_postal  = trim($_POST['code_postal'] ?? $_GET['code_postal'] ?? '');
-        $autour       = isset($_POST['autour']) ? true : (isset($_GET['autour']) ? true : false);
-
-        $order        = $_GET['order'] ?? ''; // <-- NOUVEAU
-
+/**
+ * Controller_recherche
+ * - Affiche l'écran de recherche (formulaire)
+ * - Exécute la recherche et affiche les résultats
+ */
+class Controller_recherche extends Controller
+{
+    public function action_index() {
         $model = Model::getModel();
-        // Passe le paramètre $order à la fonction rechercherPraticiens :
-        $resultats = $model->rechercherPraticiens($modalite, $specialites, $code_postal, $autour, $order);
 
-        $show_results = !empty($specialites) || !empty($code_postal) || $autour || isset($modalite);
+        // Facettes pour les <select>
+        $specialites = $model->getSpecialites();     // ex: ["Naturopathie","Ostéopathie",...]
+        $approches   = $model->getTypesApproche();   // ex: ["Énergétique","Manuelle",...]
 
         $data = [
-            'resultats'   => $resultats,
-            'modalite'    => $modalite,
+            'modalite'    => $_POST['modalite']    ?? $_GET['modalite']    ?? 'cabinet',
+            'specialite'  => $_POST['specialite']  ?? $_GET['specialite']  ?? '',
+            'approche'    => $_POST['approche']    ?? $_GET['approche']    ?? '',
             'specialites' => $specialites,
-            'code_postal' => $code_postal,
-            'autour'      => $autour,
-            'show_results'=> $show_results,
-            'order'       => $order // <-- NOUVEAU (pour la vue si besoin)
+            'approches'   => $approches
         ];
+        $this->render("recherche_praticiens", $data);
+    }
+
+    public function action_recherche() {
+        $model = Model::getModel();
+
+        $modalite   = $_POST['modalite']   ?? $_GET['modalite']   ?? 'cabinet';
+        $specialite = $_POST['specialite'] ?? $_GET['specialite'] ?? '';
+        $approche   = $_POST['approche']   ?? $_GET['approche']   ?? '';
+
+        $order      = $_GET['order'] ?? ''; // "nom", "experience", etc. (optionnel)
+
+        $resultats = $model->rechercherPraticiensSimple([
+            'modalite'   => $modalite,
+            'specialite' => $specialite,
+            'approche'   => $approche,
+            'order'      => $order
+        ]);
+        $data = [
+            'modalite'   => $modalite,
+            'specialite' => $specialite,
+            'approche'   => $approche,
+            'order'      => $order,
+            'resultats'  => $resultats
+        ];
+
         $this->render("resultats_praticiens", $data);
     }
 
     public function action_default() {
-        $this->action_recherche();
+        $this->action_index();
     }
 }
-
-?>
