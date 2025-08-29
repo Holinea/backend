@@ -1,17 +1,14 @@
 <?php
 function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
-$me = $me ?? ['name'=>'', 'avatar'=>'Content/img/avatar.png', 'specialites'=>'', 'email'=>''];
 ?>
 <link rel="stylesheet" href="./Content/css/holinea_clients.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
 <div class="layout">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
       <img src="./Content/img/logo-holinea.svg" alt="Holinea" />
     </div>
-
     <nav class="menu">
       <a href="#" class="item"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
       <a href="#" class="item active"><i class="fa-solid fa-users"></i> Mes clients</a>
@@ -26,18 +23,11 @@ $me = $me ?? ['name'=>'', 'avatar'=>'Content/img/avatar.png', 'specialites'=>'',
 
     <div class="sidebar-cta">
       <a class="btn primary" href="#"><i class="fa-solid fa-plus"></i> Nouveau RDV</a>
-
-      <!-- ✅ Profil thérapeute connecté -->
       <div class="me">
-        <img src="<?= h($me['avatar']) ?>" class="me-avatar" alt="">
+        <img src="<?= h($me['avatar'] ?? 'Content/img/avatar.png') ?>" class="me-avatar" alt="">
         <div>
-          <div class="me-name"><?= h($me['name']) ?></div>
-          <?php if (!empty($me['specialites'])): ?>
-            <div class="me-role"><?= h($me['specialites']) ?></div>
-          <?php endif; ?>
-          <?php if (!empty($me['email'])): ?>
-            <div class="me-mail"><?= h($me['email']) ?></div>
-          <?php endif; ?>
+          <div class="me-name"><?= h($me['name'] ?? '—') ?></div>
+          <div class="me-role"><?= h($me['role'] ?? '') ?></div>
         </div>
       </div>
     </div>
@@ -54,7 +44,6 @@ $me = $me ?? ['name'=>'', 'avatar'=>'Content/img/avatar.png', 'specialites'=>'',
       </div>
     </header>
 
-    <!-- Filtres -->
     <form class="filters" method="get">
       <div class="field icon-left">
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -75,7 +64,6 @@ $me = $me ?? ['name'=>'', 'avatar'=>'Content/img/avatar.png', 'specialites'=>'',
       </select>
     </form>
 
-    <!-- Cartes patients -->
     <section class="cards">
       <?php foreach (($patients ?? []) as $p): ?>
         <article class="patient-card">

@@ -746,7 +746,71 @@ public function findPatientInCsvByEmail(string $csvPath, string $email): ?array
         fclose($h);
     }
     return null;
+    
 }
+public function findPatientByEmail(string $email): ?array
+{
+    $csv = 'Content/data/patients.csv';
+    if (!is_readable($csv)) {
+        return null;
+    }
+
+    if (($h = fopen($csv, 'r')) === false) {
+        return null;
+    }
+
+    // Lire la première ligne (en-têtes)
+    $headers = fgetcsv($h, 0, ',');
+    if (!$headers) {
+        fclose($h);
+        return null;
+    }
+
+    // Normaliser les en-têtes -> snake_case
+    $norm = function($s) {
+        $s = trim($s);
+        $s = iconv('UTF-8','ASCII//TRANSLIT',$s);
+        $s = preg_replace('~[^a-z0-9]+~i','_', $s);
+        return strtolower(trim($s, '_'));
+    };
+    $headers = array_map($norm, $headers);
+
+    // Trouver l’index de l’email
+    $idxEmail = array_search('email', $headers);
+    if ($idxEmail === false) {
+        $idxEmail = array_search('mail', $headers);
+    }
+
+    // Parcours des lignes
+    while (($data = fgetcsv($h, 0, ',')) !== false) {
+        $row = [];
+        foreach ($headers as $i => $key) {
+            $row[$key] = $data[$i] ?? '';
+        }
+
+        $emailRow = strtolower(trim($row['email'] ?? ($row['mail'] ?? '')));
+        if ($emailRow !== '' && $emailRow === strtolower($email)) {
+            fclose($h);
+            return [
+                'id'         => $row['id'] ?? null,
+                'prenom'     => $row['prenom'] ?? ($row['first_name'] ?? ''),
+                'nom'        => $row['nom'] ?? ($row['name'] ?? ''),
+                'avatar'     => $row['avatar'] ?? '',
+                'email'      => $emailRow,
+                'stress'     => $row['stress'] ?? '',
+                'douleur'    => $row['douleur'] ?? '',
+                'energie'    => $row['energie'] ?? '',
+                'sommeil'    => $row['sommeil'] ?? '',
+                'objectif'   => $row['objectif'] ?? '',
+                'dernier_rdv'=> $row['dernier_rdv'] ?? ($row['last_appointment'] ?? ''),
+            ];
+        }
+    }
+
+    fclose($h);
+    return null;
+}
+
 
 
 }
