@@ -1,0 +1,64 @@
+:root{
+    --ink:#0e1630; --muted:#64748b;
+    --bg:#f7f8fb; --card:#fff; --line:#eaeef4;
+    --mint:#eaf8f2; --peach:#fff0ea;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  
+  /* Layout principal */
+  .dossier{display:grid; grid-template-columns:72px 1fr; gap:0; min-height:100vh}
+  
+  /* Sidebar */
+  .sidebar{background:#fff; border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center}
+  .sidebar .logo{display:flex; width:44px; height:44px; border-radius:12px; align-items:center; justify-content:center; margin:12px 0; background:#0e1630; color:#fff; text-decoration:none; font-weight:800}
+  .sidebar nav{display:flex; flex-direction:column; gap:14px; margin-top:8px}
+  .sidebar nav a{color:#1f2937; opacity:.75; width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:10px; text-decoration:none}
+  .sidebar nav a.active, .sidebar nav a:hover{background:#f1f5f9; opacity:1}
+  .sidebar .me{margin-top:auto; padding:12px}
+  .sidebar .me img{width:36px; height:36px; border-radius:50%; object-fit:cover}
+  
+  /* Main */
+  main{padding:18px 22px}
+  
+  /* Topbar */
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .topbar .back{width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:#fff; border:1px solid var(--line); color:#1f2937; text-decoration:none}
+  .topbar h1{font-size:26px; margin:0}
+  
+  /* KPI row */
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:14px}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px}
+  .kpi .k-label{color:var(--muted); font-weight:700}
+  .kpi .k-value{font-weight:900; font-size:28px; margin-top:6px}
+  .kpi .k-sub{color:var(--muted); font-size:12px; margin-top:6px}
+  .kpi.mint{background:var(--mint)}
+  .kpi.peach{background:var(--peach)}
+  
+  /* Grid contenu */
+  .grid{display:grid; grid-template-columns:1.55fr .85fr; gap:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px}
+  .card h3{margin:0 0 12px 0}
+  
+  /* Charts */
+  .charts{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .plot{background:#fff; border:1px dashed var(--line); border-radius:12px; padding:8px}
+  
+  /* Colonne droite */
+  .col-r{display:flex; flex-direction:column; gap:14px}
+  
+  /* Chips & bullets */
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{padding:6px 10px; border-radius:999px; background:#f2f4f8; border:1px solid var(--line); font-weight:600; font-size:13px}
+  .chips.green .chip{background:#e9f7ef}
+  .chips.orange .chip{background:#fff1e6}
+  .bullets{margin:0; padding-left:18px}
+  .bullets li{margin:4px 0}
+  .muted{color:var(--muted)}
+  
+  @media (max-width: 1100px){
+    .kpi-row{grid-template-columns:1fr 1fr}
+    .grid{grid-template-columns:1fr}
+    .charts{grid-template-columns:1fr}
+  }
+  

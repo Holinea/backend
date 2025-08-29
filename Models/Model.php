@@ -382,7 +382,7 @@ public function rechercherPraticiensSimple(array $filters): array {
     if (!empty($filters['approche'])) {
         // n’applique que si la colonne existe
         try {
-            $this->pdo->query("SELECT p.type_approche FROM praticien p LIMIT 1");
+            $this->bd->query("SELECT p.type_approche FROM praticien p LIMIT 1");
             $where[] = "p.type_approche ILIKE :approche";
             $params[':approche'] = '%'.$filters['approche'].'%';
         } catch (\Throwable $e) { /* ignore si colonne absente */ }
@@ -481,6 +481,272 @@ public function searchCommunes(string $term, int $limit = 10): array
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+
+
+
+public function getPraticienById2(int $id): ?array {
+    $sql = "
+        SELECT
+            p.*,
+            u.prenom,
+            u.nom,
+            u.mail      AS mail,        -- pour la vue
+            u.telephone_ AS telephone   -- pour la vue
+        FROM praticien p
+        JOIN utilisateur u ON u.id_utilisateur = p.id_utilisateur
+        WHERE p.id_praticien = :id
+    ";
+    $st = $this->bd->prepare($sql);
+    $st->execute([':id' => $id]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+
+  
+  public function getApprochesByPraticien(int $id): array {
+    // 1) si stocké en CSV dans p.type_approche
+    $sql = "SELECT type_approche FROM praticien WHERE id_praticien = :id";
+    $req = $this->bd->prepare($sql); $req->execute([':id'=>$id]);
+    $v = $req->fetchColumn();
+    if (!$v) return [];
+    return array_values(array_filter(array_map('trim', explode(',', $v))));
+    // 2) sinon, si table n-n praticien_approche(praticien_id, libelle) :
+    // return $this->fetchCol("SELECT libelle FROM praticien_approche WHERE praticien_id=:id", [':id'=>$id]);
+  }
+  
+  public function getSpecialitesByPraticien(int $id): array {
+    // idem : soit CSV p.specialites, soit table n-n
+    $sql = "SELECT specialites FROM praticien WHERE id_praticien = :id";
+    $req = $this->bd->prepare($sql); $req->execute([':id'=>$id]);
+    $v = $req->fetchColumn();
+    if (!$v) return [];
+    return array_values(array_filter(array_map('trim', explode(',', $v))));
+  }
+  
+  /**
+ * Renvoie un petit extrait (n prochains créneaux) pour un praticien.
+ * S’appuie sur la table `creneaux`.
+ * - Cas 1 (recommandé) : creneaux.id_agenda -> agenda.id_agenda -> agenda.id_praticien
+ * - Cas 2 (fallback)   : creneaux.id_agenda = id_praticien (si pas de table agenda)
+ */
+public function getDisposExtrait(int $idPraticien, int $limit = 6): array
+{
+    // Tentative avec agenda
+    $sqlJoin = "
+        SELECT
+          c.jour::date                             AS jour,
+          to_char(c.heure_debut, 'HH24:MI')        AS heure_debut,
+          to_char(c.heure_fin,   'HH24:MI')        AS heure_fin
+        FROM creneaux c
+        JOIN agenda a ON a.id_agenda = c.id_agenda
+        WHERE a.id_praticien = :id
+          AND (c.jour + c.heure_debut) >= NOW()
+        ORDER BY c.jour ASC, c.heure_debut ASC
+        LIMIT :lim
+    ";
+    try {
+        $st = $this->bd->prepare($sqlJoin);
+        $st->bindValue(':id',  $idPraticien, PDO::PARAM_INT);
+        $st->bindValue(':lim', $limit,       PDO::PARAM_INT);
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    } catch (\PDOException $e) {
+        $rows = [];
+    }
+
+    // Fallback : pas de table agenda (ou pas de jointure possible)
+    if (empty($rows)) {
+        $sqlFallback = "
+            SELECT
+              c.jour::date                          AS jour,
+              to_char(c.heure_debut, 'HH24:MI')     AS heure_debut,
+              to_char(c.heure_fin,   'HH24:MI')     AS heure_fin
+            FROM creneaux c
+            WHERE c.id_agenda = :id     -- hypothèse: id_agenda == id_praticien
+              AND (c.jour + c.heure_debut) >= NOW()
+            ORDER BY c.jour ASC, c.heure_debut ASC
+            LIMIT :lim
+        ";
+        $st = $this->bd->prepare($sqlFallback);
+        $st->bindValue(':id',  $idPraticien, PDO::PARAM_INT);
+        $st->bindValue(':lim', $limit,       PDO::PARAM_INT);
+        $st->execute();
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    return $rows ?: [];
+}
+  
+  // Models/Model.php
+public function getAvisRecents(int $idPraticien, int $limit = 3): array {
+    $sql = "SELECT note, commentaire, date_avis
+            FROM avis
+            WHERE id_praticien = :id
+            ORDER BY date_avis DESC
+            LIMIT :lim";
+    $stmt = $this->bd->prepare($sql);
+    $stmt->bindValue(':id', $idPraticien, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+  
+  // petit utilitaire si tu veux
+  private function fetchCol(string $sql, array $params=[]): array {
+    $req = $this->bd->prepare($sql); $req->execute($params);
+    return array_map('current', $req->fetchAll(PDO::FETCH_NUM));
+  }
+  
+  // --- AJOUTS DANS LA CLASSE Model ---
+
+/** Récupère un praticien (joint à utilisateur) par email. */
+public function getPraticienByEmail(string $email): ?array
+{
+    $sql = "
+        SELECT 
+            p.id_praticien,
+            p.specialites,
+            p.photo_profil_url AS avatar,
+            u.id_utilisateur,
+            u.prenom,
+            u.nom,
+            u.mail
+        FROM praticien p
+        JOIN utilisateur u ON u.id_utilisateur = p.id_utilisateur
+        WHERE LOWER(u.mail) = LOWER(:email)
+        LIMIT 1
+    ";
+    $st = $this->bd->prepare($sql);
+    $st->execute([':email' => $email]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+/** Lit un CSV de patients et renvoie un tableau normalisé. */
+public function readCsvPatients(string $path): array
+{
+    if (!is_readable($path)) return [];
+    $rows = [];
+
+    if (($h = fopen($path, 'r')) !== false) {
+        $headers = fgetcsv($h, 0, ',');
+        if (!$headers) { fclose($h); return []; }
+
+        $norm = function($s){
+            $s = trim($s);
+            $s = iconv('UTF-8','ASCII//TRANSLIT',$s);
+            $s = preg_replace('~[^a-z0-9]+~i','_', $s);
+            return strtolower(trim($s,'_'));
+        };
+        $headers = array_map($norm, $headers);
+
+        while (($data = fgetcsv($h, 0, ',')) !== false) {
+            $row = [];
+            foreach ($headers as $i => $key) $row[$key] = $data[$i] ?? '';
+
+            $rows[] = [
+                'id'          => $row['id'] ?? null,
+                'nom'         => $row['nom'] ?? ($row['name'] ?? ''),
+                'prenom'      => $row['prenom'] ?? ($row['first_name'] ?? ''),
+                'email'       => $row['email'] ?? ($row['mail'] ?? ''),
+                'avatar'      => $row['avatar'] ?? '',
+                'acces'       => $row['acces'] ?? ($row['access'] ?? 'partage'),
+                'stress'      => $row['stress'] ?? '',
+                'douleur'     => $row['douleur'] ?? '',
+                'energie'     => $row['energie'] ?? '',
+                'sommeil'     => $row['sommeil'] ?? '',
+                'objectif'    => $row['objectif'] ?? '',
+                'dernier_rdv' => $row['dernier_rdv'] ?? ($row['last_appointment'] ?? ''),
+                'specialite'  => $row['specialite'] ?? '',
+            ];
+        }
+        fclose($h);
+    }
+    return $rows;
+}
+
+/** Recherche un patient par email dans le CSV et renvoie sa fiche normalisée. */
+public function findPatientInCsvByEmail(string $csvPath, string $email): ?array
+{
+    if (!is_readable($csvPath) || ($h = fopen($csvPath, 'r')) === false) return null;
+
+    $headers = fgetcsv($h, 0, ',');
+    if (!$headers) { fclose($h); return null; }
+
+    $norm = function($s){
+        $s = trim($s);
+        $s = iconv('UTF-8','ASCII//TRANSLIT',$s);
+        $s = preg_replace('~[^a-z0-9]+~i','_', $s);
+        return strtolower(trim($s,'_'));
+    };
+    $headers = array_map($norm, $headers);
+
+    while (($data = fgetcsv($h, 0, ',')) !== false) {
+        $row = [];
+        foreach ($headers as $i => $key) $row[$key] = $data[$i] ?? '';
+
+        $emailRow = strtolower(trim($row['email'] ?? ($row['mail'] ?? '')));
+        if ($emailRow !== '' && $emailRow === strtolower($email)) {
+            fclose($h);
+            return [
+                'id'          => $row['id'] ?? null,
+                'prenom'      => $row['prenom'] ?? ($row['first_name'] ?? ''),
+                'nom'         => $row['nom'] ?? ($row['name'] ?? ''),
+                'avatar'      => $row['avatar'] ?? '',
+                'email'       => $emailRow,
+                'stress'      => $row['stress'] ?? '',
+                'douleur'     => $row['douleur'] ?? '',
+                'energie'     => $row['energie'] ?? '',
+                'sommeil'     => $row['sommeil'] ?? '',
+                'objectif'    => $row['objectif'] ?? '',
+                'dernier_rdv' => $row['dernier_rdv'] ?? ($row['last_appointment'] ?? ''),
+            ];
+        }
+    }
+    fclose($h);
+    return null;
+}
+    public function findPatientByEmailFromCsv(string $path): ?array
+{
+    if (!is_readable($path)) return null;
+    if (($h = fopen($path, 'r')) !== false) {
+        $headers = fgetcsv($h, 0, ',');
+        if ($headers) {
+            $norm = function($s){ $s = trim($s); $s = iconv('UTF-8','ASCII//TRANSLIT',$s);
+                $s = preg_replace('~[^a-z0-9]+~i','_', $s); return strtolower(trim($s,'_')); };
+            $headers = array_map($norm, $headers);
+
+            $idxEmail = array_search('email', $headers);
+            if ($idxEmail === false) $idxEmail = array_search('mail', $headers);
+
+            while (($data = fgetcsv($h, 0, ',')) !== false) {
+                $row = [];
+                foreach ($headers as $i => $k) { $row[$k] = $data[$i] ?? ''; }
+                $emailRow = strtolower(trim($row['email'] ?? ($row['mail'] ?? '')));
+                if ($emailRow !== '' && $emailRow === strtolower($_POST['mail'] ?? '')) {
+                    fclose($h);
+                    return [
+                        'id'          => $row['id'] ?? null,
+                        'prenom'      => $row['prenom'] ?? ($row['first_name'] ?? ''),
+                        'nom'         => $row['nom'] ?? ($row['name'] ?? ''),
+                        'avatar'      => $row['avatar'] ?? '',
+                        'email'       => $emailRow,
+                        'stress'      => $row['stress'] ?? '',
+                        'douleur'     => $row['douleur'] ?? '',
+                        'energie'     => $row['energie'] ?? '',
+                        'sommeil'     => $row['sommeil'] ?? '',
+                        'objectif'    => $row['objectif'] ?? '',
+                        'dernier_rdv' => $row['dernier_rdv'] ?? ($row['last_appointment'] ?? ''),
+                    ];
+                }
+            }
+        }
+        fclose($h);
+    }
+    return null;
+}
 
 
 }

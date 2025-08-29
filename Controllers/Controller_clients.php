@@ -3,55 +3,30 @@ require_once 'Models/Model.php';
 
 class Controller_clients extends Controller
 {
-    // Par défaut, liste les clients associés au praticien connecté
-    public function action_default() {
-        $this->action_liste();
-    }
+    private string $csvPath = 'Content/data/patients.csv';
 
-    // Affiche la liste des patients associés à CE praticien
-    public function action_liste() {
+    public function action_index()
+    {
         session_start();
-        $model = Model::getModel();
 
-        // Vérifier la connexion
-        $id_utilisateur = $_SESSION['id_utilisateur'] ?? null;
-        if (!$id_utilisateur) {
-            header("Location: ?Controller=connexion&action=login");
+        // Accès réservé au praticien connecté
+        if (empty($_SESSION['role']) || $_SESSION['role'] !== 'praticien') {
+            header('Location: index.php?Controller=connexion&action=index');
             exit;
         }
 
-        // On récupère le praticien correspondant à l'utilisateur connecté
-        $praticien = $model->getPraticienByUserId($id_utilisateur);
-        if (!$praticien) {
-            $this->render("liste_client", [
-                "patients" => [],
-                "error" => "Aucun praticien trouvé pour ce compte."
-            ]);
-            return;
-        }
+        $m = Model::getModel();
+        $patients = $m->readCsvPatients($this->csvPath);
 
-        $id_praticien = $praticien['id_praticien'];
-        $patients = $model->getPatientsOfPraticien($id_praticien);
-        $this->render("liste_client", ["patients" => $patients]);
+        // Tri desc. par date de dernier RDV
+        usort($patients, function($a, $b){
+            return strcmp($b['dernier_rdv'] ?? '', $a['dernier_rdv'] ?? '');
+        });
+
+        $this->render('clients_index', [
+            'patients' => $patients,
+        ]);
     }
 
-    // Affiche le détail d'un patient
-    public function action_detail() {
-        $numero_dossier = $_GET['numero_dossier'] ?? null;
-        if (!$numero_dossier) {
-            header("Location: ?Controller=clients&action=liste");
-            exit;
-        }
-        $model = Model::getModel();
-        $patient = $model->getPatientFullInfos($numero_dossier);
-        if (!$patient) {
-            $this->render("liste_client", [
-                "error" => "Client introuvable."
-            ]);
-        } else {
-            $this->render("detail_client", [
-                "patient" => $patient
-            ]);
-        }
-    }
+    public function action_default(){ $this->action_index(); }
 }

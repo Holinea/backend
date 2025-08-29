@@ -1,0 +1,155 @@
+/* =========================
+   Profil praticien – Holinea
+   ========================= */
+   :root{
+    --h-bleu:#15193a;
+    --h-bleu-soft:#1f2550;
+    --h-orange:#f27c5a;
+    --h-jaune:#ffd447;
+    --h-vert:#90d7bd;
+    --h-sable:#f6efe3;
+    --h-bg:#faf8f3;
+    --h-line:#ebe7df;
+    --h-chip:#f3f4f6;
+    --h-green:#53b68d;
+  }
+  
+  body{background:var(--h-bg); color:var(--h-bleu);}
+  
+  .profile-wrap{
+    max-width:1200px;
+    margin:26px auto 60px;
+    padding:0 18px;
+    display:flex; flex-direction:column; gap:24px;
+  }
+  
+  /* ===== Header ===== */
+  .profile-head{
+    display:grid;
+    grid-template-columns:1fr 380px; /* gauche flexible + droite compacte */
+    gap:22px;
+    background:#fff;
+    padding:22px;
+    border-radius:18px;
+    box-shadow:0 4px 24px rgba(21,25,58,.06);
+    border:1px solid var(--h-line);
+  }
+  .ph-left{display:flex; gap:18px; align-items:center;}
+  .ph-avatar{
+    width:180px; height:180px; object-fit:cover; border-radius:18px;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+  }
+  .ph-left h1{margin:0 0 8px 0; font-size:34px; letter-spacing:.2px;}
+  
+  .chips{display:flex; flex-wrap:wrap; gap:10px;}
+  .chip{
+    background:var(--h-chip);
+    border-radius:999px;
+    padding:8px 14px;
+    font-weight:700; font-size:14px;
+    color:#234; border:1px solid #e9e9ee;
+  }
+  
+  /* KPI cards */
+  .kpis{display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:14px; margin-top:12px;}
+  .kpi{
+    background:#fff; border:1px solid var(--h-line);
+    border-radius:14px; padding:14px 16px;
+    box-shadow:0 4px 16px rgba(21,25,58,.05);
+  }
+  .kpi .k-title{color:#667; font-weight:700; font-size:13px; margin-bottom:6px;}
+  .kpi .k-value{font-size:18px; font-weight:800; color:var(--h-bleu-soft);}
+  
+  /* Actions */
+  .cta-row{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 18px; border-radius:12px; font-weight:700;
+    text-decoration:none; border:1px solid transparent; transition:.18s;
+    box-shadow:0 6px 18px rgba(21,25,58,.06);
+  }
+  .btn.primary{
+    background:linear-gradient(90deg,#FF7A59,#F7C948);
+    color:#fff; border:none; box-shadow:0 4px 12px rgba(249,127,86,.25);
+  }
+  .btn.primary.sm{ padding:8px 12px; }
+  .btn.ghost{background:#fff; color:#1F2A44; border:1px solid #E6E6E6;}
+  .btn.ghost.navy{border-color:#20243A; color:#20243A;}
+  .btn.soft{background:#FFE6DC; color:#9A4826; border:1px solid #FFD2C2;}
+  .btn.full{width:100%; justify-content:center;}
+  .btn.small{padding:6px 10px; font-size:.9rem; border-radius:10px;}
+  .btn:hover{filter:brightness(.98); transform:translateY(-1px);}
+  
+  /* Top-right actions */
+  .top-bar{display:flex; gap:10px; justify-content:flex-end; margin-bottom:12px;}
+  .btn.print{ background:#F4F6F8; color:#1F2A44; border:1px solid #E2E8F0; }
+  .btn.share{ background:#20243A; color:#fff; border:1px solid #20243A; }
+  
+  /* ===== Layout ===== */
+  .profile-grid{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 420px; /* gauche flexible + droite fixe */
+    gap:30px; /* espace raisonnable */
+    align-items:start;
+  }
+  .card{
+    background:#fff; border:1px solid var(--h-line);
+    border-radius:16px; padding:20px;
+    box-shadow:0 6px 22px rgba(21,25,58,.05);
+  }
+  .card h2{margin:0 0 10px 0; font-size:22px;}
+  .card h3{margin:18px 0 8px 0; font-size:18px;}
+  
+  /* À propos */
+  .about p{line-height:1.6; letter-spacing:.1px;}
+  /* 👉 si tu veux que À propos prenne toute la largeur : */
+  /* .about { grid-column: 1 / -1; } */
+  
+  /* Video bloc */
+  .video-box{
+    margin-top:14px; background:#F4F4F4;
+    border:1px dashed #D9D9D9; border-radius:16px; height:220px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    color:#20243A; text-decoration:none;
+  }
+  .video-box .play{width:56px; height:56px; border-radius:50%; background:#C95A15; display:flex; align-items:center; justify-content:center; color:#fff;}
+  .video-box.link{cursor:pointer;}
+  .video-box.empty{opacity:.7;}
+  .video-box iframe{width:100%; height:220px; border:0; border-radius:16px}
+  
+  /* ===== Sidebar ===== */
+  .side .meta{list-style:none; padding:0; margin:0 0 14px;}
+  .side .meta li{margin:8px 0; display:flex; gap:8px; align-items:center;}
+  .side .meta i{color:#587;}
+  
+  /* Disponibilités */
+  .slots{list-style:none; margin:6px 0 12px; padding:0;}
+  .slots li{
+    padding:10px 12px; border:1px dashed #e6e6e6; border-radius:12px;
+    margin-bottom:8px; display:flex; align-items:center; gap:8px;
+  }
+  .slots li i{opacity:.75;}
+  .dispos{margin-top:8px;}
+  .dispos .slot{
+    background:#7CC3A7; color:#fff;
+    padding:8px 12px; border-radius:999px; margin:8px 8px 0 0; display:inline-block;
+  }
+  
+  /* Contacts */
+  .contacts{list-style:none; padding:0; margin:0;}
+  .contacts li{display:flex; align-items:center; gap:10px; padding:8px 0;}
+  .contacts i{ color:#1F2A44; opacity:.9; }
+  .contacts a{ color:#0B5BD3; text-decoration:underline; }
+  .contacts .muted{color:#9aa0a6;}
+  
+  /* Map placeholder */
+  .map-ph{height:110px; background:#F7F7F7; border:1px dashed #D9D9D9; border-radius:12px; margin:8px 0 16px;}
+  
+  /* ===== Responsive ===== */
+  @media (max-width: 980px){
+    .profile-head{grid-template-columns:1fr;}
+    .profile-grid{grid-template-columns:1fr;}
+    .ph-left{align-items:flex-start;}
+    .ph-avatar{width:140px;height:140px;}
+  }
+  

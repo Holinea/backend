@@ -131,7 +131,7 @@ function ratingFromTaux($taux){
           </div>
 
           <div class="actions">
-            <a class="btn ghost" href="#">Voir profil</a>
+            <a class="btn ghost" href="index.php?Controller=praticien&action=show&id=<?= intval($p['id_praticien']) ?>"> Voir profil</a>
             <a class="btn primary" href="#">Prendre rendez-vous</a>
             <a class="btn soft" href="#">Ajouter à mon parcours</a>
           </div>
