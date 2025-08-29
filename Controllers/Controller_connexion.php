@@ -1,35 +1,31 @@
 <?php
+require_once 'Models/Model.php';
 
 class Controller_connexion extends Controller
 {
-    /**
-     * GET /connexion
-     * Affiche la page de connexion.
-     */
+    /** Formulaire de connexion */
     public function action_index()
     {
-        // message flash éventuel
-        $error = $_SESSION['flash_error'] ?? null;
-        unset($_SESSION['flash_error']);
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
+        // Si déjà connecté, on envoie vers l’espace praticien
+        if (!empty($_SESSION['role']) && $_SESSION['role'] === 'praticien') {
+            header('Location: index.php?Controller=clients&action=index');
+            exit;
+        }
+
+        // Affiche la vue de connexion
         $this->render('connexion', [
-            'error' => $error,
+            'error' => $_SESSION['flash_error'] ?? null
         ]);
+        unset($_SESSION['flash_error']);
     }
 
-    /**
-     * POST /connexion/login
-     * 1) Essaie de reconnaître un patient par email dans le CSV.
-     * 2) Sinon, essaie de reconnaître un praticien par email en BDD.
-     * 3) Sinon => message d’erreur.
-     *
-     * ⚠️ Toute la lecture se fait via Model.php :
-     *   - $this->model->findPatientByEmail(string $email) : ?array
-     *   - $this->model->getPraticienByEmail(string $email) : ?array
-     */
+    /** Traitement du POST */
     public function action_login()
     {
-        $model = Model::getModel();
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
         $mail = trim($_POST['mail'] ?? '');
         $pass = trim($_POST['mot_de_passe'] ?? '');
 
@@ -39,54 +35,41 @@ class Controller_connexion extends Controller
             exit;
         }
 
-        // 1) Patient (CSV)
-        $patient = $this->model->findPatientByEmail($mail); // -> ?array
-        if ($patient) {
-            $_SESSION['role']           = 'patient';
-            $_SESSION['user_email']     = $mail;
-            $_SESSION['user_id']        = $patient['id'] ?? null;
-            $_SESSION['user_name']      = trim(($patient['prenom'] ?? '').' '.($patient['nom'] ?? ''));
-            $_SESSION['user_avatar']    = $patient['avatar'] ?: 'Content/img/avatar.png';
-            $_SESSION['patient_profile']= $patient;
+        // TODO: vérifier le mot de passe avec la BDD (hash)
+        // Pour l’instant on considère que tout email est accepté.
 
-            header('Location: index.php?Controller=patient&action=dashboard');
-            exit;
+        // On tente de récupérer le praticien par email pour afficher ses vraies infos
+        $m = Model::getModel();
+        $me = [
+            'avatar' => 'Content/img/avatar.png',
+            'name'   => $mail,
+            'role'   => 'Praticien',
+        ];
+
+        if (method_exists($m, 'getPraticienByEmail')) {
+            $p = $m->getPraticienByEmail($mail); // doit retourner prenom, nom, photo_profil_url, specialites…
+            if ($p) {
+                $me['name']   = trim(($p['prenom'] ?? '').' '.($p['nom'] ?? '')) ?: $mail;
+                $me['avatar'] = $p['avatar'] ?? ($p['photo_profil_url'] ?? $me['avatar']);
+                $me['role']   = $p['specialites'] ?: 'Praticien';
+            }
         }
 
-        // 2) Praticien (BDD)
-        $prat = $this->model->getPraticienByEmail($mail); // -> ?array
-        if ($prat) {
-            $_SESSION['role']         = 'therapeute';
-            $_SESSION['user_email']   = $mail;
-            $_SESSION['user_id']      = $prat['id_praticien'] ?? null;
-            $_SESSION['user_name']    = trim(($prat['prenom'] ?? '').' '.($prat['nom'] ?? ''));
-            $_SESSION['user_avatar']  = $prat['avatar'] ?: 'Content/img/avatar.png';
-            $_SESSION['praticien']    = $prat;
+        // Mémorise la session praticien
+        $_SESSION['role']        = 'praticien';
+        $_SESSION['user_email']  = $mail;
+        $_SESSION['user_id']     = $p['id_utilisateur'] ?? null;
+        $_SESSION['praticien_id']= $p['id_praticien']   ?? null;
+        $_SESSION['user_name']   = $me['name'];
+        $_SESSION['user_avatar'] = $me['avatar'];
+        $_SESSION['user_title']  = $me['role'];
 
-            header('Location: index.php?Controller=clients&action=index');
-            exit;
-        }
-
-        // 3) échec
-        $_SESSION['flash_error'] = "Identifiants inconnus.";
-        header('Location: index.php?Controller=connexion&action=index');
+        header('Location: index.php?Controller=clients&action=index');
         exit;
     }
 
-    /**
-     * GET /connexion/logout
-     */
-    public function action_logout()
+    public function action_default()
     {
-        $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-        }
-        session_destroy();
-        header('Location: index.php?Controller=connexion&action=index');
-        exit;
+        $this->action_index();
     }
-
-    public function action_default() { $this->action_index(); }
 }

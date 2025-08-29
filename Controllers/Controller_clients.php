@@ -5,25 +5,23 @@ class Controller_clients extends Controller
 {
     public function action_index()
     {
-        // sécurité basique : réservé aux thérapeutes
-        if (($_SESSION['role'] ?? '') !== 'therapeute') {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
+        // Accès réservé au praticien connecté
+        if (empty($_SESSION['role']) || $_SESSION['role'] !== 'praticien') {
             header('Location: index.php?Controller=connexion&action=index');
             exit;
         }
 
-        // Récup identité connectée (pour la sidebar)
-        $me = [
-            'name'   => $_SESSION['user_name']   ?? '—',
-            'avatar' => $_SESSION['user_avatar'] ?? 'Content/img/avatar.png',
-            'role'   => 'Naturopathe', // si tu l’as en BDD, remplace par la vraie valeur
-        ];
+        // Pour l’instant, on n’affiche pas encore de patients (pas de CSV / pas de BDD clients).
+        $patients = []; // à peupler plus tard
 
-        // Récup patients (via Model)
-        $patients = $this->model->getPatients(); // -> array
-        // Tri par dernier RDV desc
-        usort($patients, function($a,$b){
-            return strcmp($b['dernier_rdv'] ?? '', $a['dernier_rdv'] ?? '');
-        });
+        // Infos de l’utilisateur connecté (sidebar / header)
+        $me = [
+            'avatar' => $_SESSION['user_avatar'] ?? 'Content/img/avatar.png',
+            'name'   => $_SESSION['user_name']   ?? '—',
+            'role'   => $_SESSION['user_title']  ?? 'Praticien',
+        ];
 
         $this->render('clients_index', [
             'patients' => $patients,

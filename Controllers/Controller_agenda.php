@@ -3,30 +3,27 @@ require_once 'Models/Model.php';
 
 class Controller_agenda extends Controller
 {
-    public function action_default()
+    public function action_index()
     {
-        $this->action_showAgenda();
-    }
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
-    public function action_showAgenda()
-    {
-        session_start();
-        // (Optionnel) Vérifie que le thérapeute est connecté
-        if (empty($_SESSION['id_utilisateur']) || ($_SESSION['role'] ?? '') != 'therapeute') {
-            header("Location: ?Controller=connexion&action=login");
+        // réservé au praticien connecté
+        if (empty($_SESSION['role']) || $_SESSION['role'] !== 'praticien') {
+            header('Location: index.php?Controller=connexion&action=index');
             exit;
         }
 
-        // Exemple statique : la liste des événements sera intégrée côté JS dans la vue
-        // Si tu veux alimenter dynamiquement, tu pourrais ici charger les RDV du thérapeute :
-        /*
-        $model = Model::getModel();
-        $events = $model->getRdvByTherapeute($_SESSION['id_utilisateur']);
-        */
+        // données d’en-tête (nom/avatar dans la barre latérale si besoin)
+        $me = [
+            'avatar' => $_SESSION['user_avatar'] ?? 'Content/img/avatar.png',
+            'name'   => $_SESSION['user_name']   ?? '—',
+            'role'   => $_SESSION['user_title']  ?? 'Praticien',
+        ];
 
-        $this->render("agenda", [
-            "title" => "Mon agenda",
-            // "events" => $events // à décommenter quand tu feras la partie dynamique
+        $this->render('agenda', [
+            'me' => $me
         ]);
     }
+
+    public function action_default(){ $this->action_index(); }
 }

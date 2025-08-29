@@ -5,6 +5,7 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
 <div class="layout">
+  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
       <img src="./Content/img/logo-holinea.svg" alt="Holinea" />
@@ -13,7 +14,9 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
       <a href="#" class="item"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
       <a href="#" class="item active"><i class="fa-solid fa-users"></i> Mes clients</a>
       <a href="#" class="item"><i class="fa-solid fa-eye"></i> Voir mes séances</a>
-      <a href="#" class="item"><i class="fa-solid fa-calendar"></i> Agenda</a>
+      <a href="index.php?Controller=agenda&action=index" class="item">
+            <i class="fa-solid fa-calendar"></i> Agenda
+      </a>
       <a href="#" class="item"><i class="fa-solid fa-book"></i> Annuaires</a>
       <a href="#" class="item"><i class="fa-solid fa-chart-line"></i> Mes Statistiques</a>
       <a href="#" class="item"><i class="fa-solid fa-message"></i> Messagerie <span class="badge">5</span></a>
@@ -27,7 +30,7 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
         <img src="<?= h($me['avatar'] ?? 'Content/img/avatar.png') ?>" class="me-avatar" alt="">
         <div>
           <div class="me-name"><?= h($me['name'] ?? '—') ?></div>
-          <div class="me-role"><?= h($me['role'] ?? '') ?></div>
+          <div class="me-role"><?= h($me['role'] ?? 'Praticien') ?></div>
         </div>
       </div>
     </div>
@@ -44,16 +47,17 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
       </div>
     </header>
 
+    <!-- Filtres (inactifs pour le moment) -->
     <form class="filters" method="get">
       <div class="field icon-left">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="q" placeholder="Rechercher par nom, email…" value="<?= h($_GET['q'] ?? '') ?>">
+        <input type="text" name="q" placeholder="Rechercher par nom, email…" value="">
       </div>
       <select name="order">
         <option value="nom">Nom</option>
         <option value="dernier_rdv">Dernier RDV</option>
       </select>
-      <input type="date" name="date" value="<?= h($_GET['date'] ?? '') ?>">
+      <input type="date" name="date" value="">
       <select name="specialite">
         <option value="">Spécialité</option>
         <option>Yoga</option><option>Naturopathie</option><option>Massage</option>
@@ -64,47 +68,9 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
       </select>
     </form>
 
+    <!-- Liste vide pour l’instant -->
     <section class="cards">
-      <?php foreach (($patients ?? []) as $p): ?>
-        <article class="patient-card">
-          <div class="pc-left">
-            <img class="avatar" src="<?= h($p['avatar'] ?: './Content/img/avatar.png') ?>" alt="">
-            <div>
-              <div class="name"><?= h(($p['prenom'] ?: '').' '.($p['nom'] ?: '')) ?></div>
-              <div class="status">
-                <?php if (($p['acces'] ?? 'partage') === 'refuse'): ?>
-                  <span class="badge red">Accès refusé</span>
-                <?php else: ?>
-                  <span class="badge green">Accès partagé</span>
-                <?php endif; ?>
-              </div>
-            </div>
-          </div>
-
-          <ul class="kpis">
-            <li><span class="pill"><i>😌</i> Stress <b><?= h($p['stress']) ?></b></span></li>
-            <li><span class="pill"><i>❌</i> Douleur <b><?= h($p['douleur']) ?></b></span></li>
-            <li><span class="pill"><i>⚡</i> Énergie <b><?= h($p['energie']) ?></b></span></li>
-            <li><span class="pill"><i>😴</i> Sommeil <b><?= h($p['sommeil']) ?></b></span></li>
-          </ul>
-
-          <div class="pc-meta">
-            <span>Dernier RDV : <?= h($p['dernier_rdv'] ?: '—') ?></span>
-            <?php if (!empty($p['objectif'])): ?>
-              <span class="sep">•</span><span>Objectif : <?= h($p['objectif']) ?></span>
-            <?php endif; ?>
-          </div>
-
-          <div class="pc-actions">
-            <a class="btn light" href="#"><i class="fa-regular fa-paper-plane"></i> Message</a>
-            <a class="btn ghost" href="#"><i class="fa-regular fa-folder-open"></i> Voir le dossier</a>
-          </div>
-        </article>
-      <?php endforeach; ?>
-
-      <?php if (empty($patients)): ?>
-        <div class="empty">Aucun patient trouvé.</div>
-      <?php endif; ?>
+      <div class="empty">Aucun patient pour le moment.</div>
     </section>
   </main>
 </div>
