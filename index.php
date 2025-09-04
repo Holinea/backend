@@ -7,7 +7,7 @@ require_once "Models/Model.php";
 //Inclusion de la classe Controller
 require_once "Controllers/Controller.php";
 
-$controllers = ["home","connexion", "therapeute", "agenda","verification", "clients","creneaux","recherche","rechercheTherapeute","api","praticien","dossier","patient"]; 
+$controllers = ["home","connexion", "therapeute", "agenda","verification", "clients","creneaux","recherche","rechercheTherapeute", "connexion_patient","api","praticien","dossier","patient","inscription","admin"]; 
 $controller_default = "home";
 
 //On teste si le paramètre controller existe et correspond à un contrôleur de la liste $controllers

@@ -810,7 +810,341 @@ public function findPatientByEmail(string $email): ?array
     fclose($h);
     return null;
 }
+public function agenda_listSlotsInRange(int $praticienId, string $from, string $to): array {
+    $sql = "SELECT id, date,
+                   start_time AS start,
+                   end_time   AS end,
+                   status, title, place
+            FROM agenda_slots
+            WHERE praticien_id = :pid AND date BETWEEN :from AND :to
+            ORDER BY date ASC, start_time ASC";
+    $st = $this->bd->prepare($sql);
+    $st->execute([':pid'=>$praticienId, ':from'=>$from, ':to'=>$to]);
+    return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+public function agenda_allDaysHaveFree(int $praticienId, string $from, string $to): bool {
+    $sql = "SELECT date FROM agenda_slots
+            WHERE praticien_id=:pid AND date BETWEEN :from AND :to AND status='free'
+            GROUP BY date";
+    $st = $this->bd->prepare($sql);
+    $st->execute([':pid'=>$praticienId, ':from'=>$from, ':to'=>$to]);
+    $dates = array_column($st->fetchAll(PDO::FETCH_ASSOC), 'date');
+
+    $d1 = new DateTime($from); $d2 = new DateTime($to);
+    for($d = clone $d1; $d <= $d2; $d->modify('+1 day')){
+        if (!in_array($d->format('Y-m-d'), $dates, true)) return false;
+    }
+    return true;
+}
+
+public function agenda_slotExists(int $praticienId, string $date, string $start, string $end, string $status): bool {
+    $sql = "SELECT 1 FROM agenda_slots
+            WHERE praticien_id=:pid AND date=:d
+              AND start_time=:s AND end_time=:e AND status=:st
+            LIMIT 1";
+    $st = $this->bd->prepare($sql);
+    $st->execute([':pid'=>$praticienId, ':d'=>$date, ':s'=>$start, ':e'=>$end, ':st'=>$status]);
+    return (bool)$st->fetchColumn();
+}
+
+public function agenda_saveSlot(int $praticienId, string $date, string $start, string $end,
+                                string $status, string $title='', string $place='cabinet'): int {
+    $sql = "INSERT INTO agenda_slots (praticien_id, date, start_time, end_time, status, title, place)
+            VALUES (:pid,:d,:s,:e,:st,:t,:p)";
+    $st = $this->bd->prepare($sql);
+    $st->execute([
+        ':pid'=>$praticienId, ':d'=>$date, ':s'=>$start, ':e'=>$end,
+        ':st'=>$status, ':t'=>$title, ':p'=>$place
+    ]);
+    return (int)$this->bd->lastInsertId();
+}
+
+public function agenda_markMonthAllFree(int $praticienId, string $month, string $start, string $end): int {
+    $from = $month.'-01';
+    $to   = date('Y-m-t', strtotime($from));
+
+    $sql = "SELECT date FROM agenda_slots
+            WHERE praticien_id=:pid AND date BETWEEN :from AND :to AND status='free'
+            GROUP BY date";
+    $st = $this->bd->prepare($sql);
+    $st->execute([':pid'=>$praticienId, ':from'=>$from, ':to'=>$to]);
+    $already = array_column($st->fetchAll(PDO::FETCH_ASSOC), 'date');
+
+    $added = 0;
+    $d1 = new DateTime($from); $d2 = new DateTime($to);
+    $ins = $this->bd->prepare("INSERT INTO agenda_slots
+                               (praticien_id,date,start_time,end_time,status,title,place)
+                               VALUES (:pid,:d,:s,:e,'free','Créneau dispo','cabinet')");
+    for($d = clone $d1; $d <= $d2; $d->modify('+1 day')){
+        $date = $d->format('Y-m-d');
+        if (in_array($date, $already, true)) continue;
+        $ins->execute([':pid'=>$praticienId, ':d'=>$date, ':s'=>$start, ':e'=>$end]);
+        $added++;
+    }
+    return $added;
+}
+
+public function agenda_nextAvailabilities(int $praticienId, string $from, int $limit=10): array {
+    $sql = "SELECT date,
+                   start_time AS start,
+                   end_time   AS end
+            FROM agenda_slots
+            WHERE praticien_id=:pid AND status='free' AND date >= :from
+            ORDER BY date ASC, start_time ASC
+            LIMIT ".(int)$limit;
+    $st = $this->bd->prepare($sql);
+    $st->execute([':pid'=>$praticienId, ':from'=>$from]);
+    return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+/** Retourne les séances d’un praticien dans un intervalle, avec statut calculé + infos patient. */
+public function agenda_listSessions(
+    int $praticienId, string $from, string $to,
+    string $statusFilter = '', ?int $patientId = null, string $specialiteFilter = ''
+): array {
+    // On supporte 2 variantes:
+    // 1) Table rdv avec (date_rdv, heure_debut/heure_fin) et statut
+    // 2) Table agenda_slots + jointure rdv/booking (au besoin tu pourras l’étendre)
+    //
+    // Ici on cible d’abord une table "rdv" (la plus fréquente), avec fallback
+    // sur des alias si tes colonnes s'appellent autrement.
+
+    $sql = "
+        SELECT
+            r.id_rdv                                   AS id,
+            -- date/heure (essayons les noms usuels, sinon alias)
+            COALESCE(r.date_rdv, r.date)               AS date_rdv,
+            COALESCE(r.heure_debut, r.start_time, r.start) AS heure_debut,
+            COALESCE(r.heure_fin,   r.end_time,   r.end)   AS heure_fin,
+            -- statut explicite si présent, sinon calcul en fonction de NOW()
+            COALESCE(
+                NULLIF(r.statut, ''),
+                CASE WHEN (COALESCE(r.date_rdv, r.date)::timestamp
+                      + COALESCE(r.heure_debut, r.start_time, r.start)) < NOW()
+                     THEN 'past' ELSE 'upcoming' END
+            ) AS statut,
+            -- patient
+            u.id_utilisateur            AS patient_id,
+            TRIM(CONCAT(u.prenom, ' ', u.nom)) AS patient_nom,
+            COALESCE(u.photo_profil_url, u.avatar, '') AS patient_avatar,
+            -- spécialité liée au praticien ou au RDV
+            COALESCE(p.specialites, r.specialite, '')   AS specialite
+        FROM rdv r
+        JOIN utilisateur u ON u.id_utilisateur = COALESCE(r.id_patient, r.id_utilisateur, r.id_client)
+        JOIN praticien p   ON p.id_praticien   = r.id_praticien
+        WHERE r.id_praticien = :pid
+          AND COALESCE(r.date_rdv, r.date) BETWEEN :from AND :to
+    ";
+
+    $params = [':pid'=>$praticienId, ':from'=>$from, ':to'=>$to];
+
+    if ($statusFilter === 'upcoming') {
+        $sql .= " AND (COALESCE(r.date_rdv, r.date)::timestamp +
+                       COALESCE(r.heure_debut, r.start_time, r.start)) >= NOW() ";
+    } elseif ($statusFilter === 'past') {
+        $sql .= " AND (COALESCE(r.date_rdv, r.date)::timestamp +
+                       COALESCE(r.heure_debut, r.start_time, r.start)) < NOW() ";
+    }
+
+    if (!empty($patientId)) {
+        $sql .= " AND u.id_utilisateur = :pid_user ";
+        $params[':pid_user'] = $patientId;
+    }
+    if ($specialiteFilter !== '') {
+        $sql .= " AND COALESCE(p.specialites, r.specialite, '') ILIKE :spec ";
+        $params[':spec'] = '%'.$specialiteFilter.'%';
+    }
+
+    $sql .= " ORDER BY COALESCE(r.date_rdv, r.date) ASC,
+                     COALESCE(r.heure_debut, r.start_time, r.start) ASC ";
+
+    try {
+        $st = $this->bd->prepare($sql);
+        $st->execute($params);
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (\Throwable $e) {
+        // Fallback minimal si la table/colonnes diffèrent trop :
+        return [];
+    }
+}
+
+/** Facette : liste des patients présents dans l’intervalle. */
+public function agenda_sessionsDistinctPatients(int $praticienId, string $from, string $to): array {
+    $sql = "
+        SELECT DISTINCT u.id_utilisateur AS id, TRIM(CONCAT(u.prenom,' ',u.nom)) AS nom
+        FROM rdv r
+        JOIN utilisateur u ON u.id_utilisateur = COALESCE(r.id_patient, r.id_utilisateur, r.id_client)
+        WHERE r.id_praticien = :pid AND COALESCE(r.date_rdv, r.date) BETWEEN :from AND :to
+        ORDER BY nom ASC
+    ";
+    try {
+        $st = $this->bd->prepare($sql);
+        $st->execute([':pid'=>$praticienId, ':from'=>$from, ':to'=>$to]);
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (\Throwable $e) { return []; }
+}
+
+/** Facette : spécialités vues dans l’intervalle. */
+public function agenda_sessionsDistinctSpecialites(int $praticienId, string $from, string $to): array {
+    $sql = "
+        SELECT DISTINCT COALESCE(p.specialites, r.specialite, '') AS specialite
+        FROM rdv r
+        JOIN praticien p ON p.id_praticien = r.id_praticien
+        WHERE r.id_praticien = :pid AND COALESCE(r.date_rdv, r.date) BETWEEN :from AND :to
+          AND COALESCE(p.specialites, r.specialite, '') <> ''
+        ORDER BY 1 ASC
+    ";
+    try {
+        $st = $this->bd->prepare($sql);
+        $st->execute([':pid'=>$praticienId, ':from'=>$from, ':to'=>$to]);
+        return array_column($st->fetchAll(PDO::FETCH_ASSOC), 'specialite');
+    } catch (\Throwable $e) { return []; }
+}
+// --- utilitaires ---
+public function userExists(string $email): bool {
+    $st = $this->bd->prepare("SELECT 1 FROM utilisateur WHERE LOWER(mail)=LOWER(:m) LIMIT 1");
+    $st->execute([':m'=>$email]);
+    return (bool)$st->fetchColumn();
+}
+
+/**
+ * Crée un utilisateur (role 'patient') + sa fiche patient.
+ * - $payload = [
+ *     'mail','nom','prenom','telephone','mot_de_passe','avatar_tmp'(chemin tmp)
+ *   ]
+ * Retourne l'id_utilisateur créé.
+ */
+
+public function getAllPatients(): array {
+    $sql = "SELECT u.id_utilisateur, u.nom, u.prenom, u.mail, u.statut_compte, u.photo_profil_url, u.date_inscription
+            FROM utilisateur u
+            JOIN patient p ON u.id_utilisateur = p.id_utilisateur
+            ORDER BY u.date_inscription DESC";
+    return $this->bd->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+public function updateUserStatus(int $id, string $status): bool {
+    $allowed = ['actif','refuse','incomplet','en_attente'];
+    if (!in_array($status, $allowed, true)) return false;
+    $st = $this->bd->prepare("UPDATE utilisateur SET statut_compte = :s WHERE id_utilisateur = :id");
+    return $st->execute([':s'=>$status, ':id'=>$id]);
+}
 
 
+/* ----- Création utilisateur(patient) + fiche patient ----- */
+public function createPatientWithUser(array $payload, string $statutInitial = 'en_attente'): int
+{
+    $this->bd->beginTransaction();
+    try {
+        // 1) utilisateur
+        $sqlU = "INSERT INTO utilisateur
+                 (mail, nom, prenom, date_inscription, derniere_connexion,
+                  role_utilisateur, statut_compte, mot_de_passe,
+                  consentement_cgu, consentement_partage_donnees_sante_, telephone_)
+                 VALUES
+                 (:mail, :nom, :prenom, CURRENT_DATE, NOW(),
+                  'patient', :statut, :hash,
+                  true, false, :tel)
+                 RETURNING id_utilisateur";
+        $stU = $this->bd->prepare($sqlU);
+        $stU->execute([
+            ':mail'   => $payload['mail'],
+            ':nom'    => $payload['nom'],
+            ':prenom' => $payload['prenom'],
+            ':statut' => $statutInitial,
+            ':hash'   => password_hash($payload['mot_de_passe'], PASSWORD_DEFAULT),
+            ':tel'    => $payload['telephone'] ?? null,
+        ]);
+        $idUser = (int)$stU->fetchColumn();
+
+        // 2) avatar (optionnel)
+        if (!empty($payload['avatar_tmp']) && is_file($payload['avatar_tmp'])) {
+            $dir = 'Content/uploads/avatars';
+            if (!is_dir($dir)) @mkdir($dir, 0775, true);
+            $ext  = strtolower(pathinfo($payload['avatar_tmp'], PATHINFO_EXTENSION) ?: 'jpg');
+            $dest = $dir . '/u' . $idUser . '.' . $ext;
+            @rename($payload['avatar_tmp'], $dest);
+            $this->bd->prepare("UPDATE utilisateur SET photo_profil_url = :p WHERE id_utilisateur=:id")
+                     ->execute([':p'=>$dest, ':id'=>$idUser]);
+        }
+
+        // 3) patient (fiche minimale) — on ALIMENTE date_de_naissance
+        $sqlP = "INSERT INTO patient (id_utilisateur, date_inscription, date_de_naissance)
+                 VALUES (:id, CURRENT_DATE, :dna)";
+        $this->bd->prepare($sqlP)->execute([
+            ':id'  => $idUser,
+            ':dna' => $payload['date_naissance'] ?? null,   // requis si colonne NOT NULL
+        ]);
+
+        $this->bd->commit();
+        return $idUser;
+
+    } catch (\Throwable $e) {
+        $this->bd->rollBack();
+        throw $e;
+    }
+}
+
+
+/* ----- Status helpers ----- */
+public function activateUser(int $id): void
+{
+    $this->bd->prepare("UPDATE utilisateur SET statut_compte='actif' WHERE id_utilisateur=:id")
+             ->execute([':id'=>$id]);
+}
+
+public function setUserPending(int $id): void
+{
+    $this->bd->prepare("UPDATE utilisateur SET statut_compte='en_attente' WHERE id_utilisateur=:id")
+             ->execute([':id'=>$id]);
+}
+
+public function getUserName(int $id): ?string
+{
+    $st = $this->bd->prepare("SELECT prenom||' '||nom AS n FROM utilisateur WHERE id_utilisateur=:id");
+    $st->execute([':id'=>$id]);
+    $v = $st->fetchColumn();
+    return $v !== false ? $v : null;
+}
+
+/* ----- Vérification email ----- */
+/* Table SQL : user_email_verifications(user_id int fk, token text pk, expires_at timestamptz, sent_at timestamptz) */
+
+public function createVerificationToken(int $userId, string $token, string $ttl = '+24 hours'): void
+{
+    $st = $this->bd->prepare("
+        INSERT INTO user_email_verifications (user_id, token, expires_at, sent_at)
+        VALUES (:uid, :t, (NOW() + INTERVAL '1 second') + (:ttl)::interval, NOW())
+    ");
+    $st->execute([':uid'=>$userId, ':t'=>$token, ':ttl'=>$ttl]);
+}
+
+public function consumeVerificationToken(string $token): ?int
+{
+    // supprime et retourne l'user si non expiré
+    $st = $this->bd->prepare("
+        DELETE FROM user_email_verifications
+        WHERE token = :t AND expires_at >= NOW()
+        RETURNING user_id
+    ");
+    $st->execute([':t'=>$token]);
+    $uid = $st->fetchColumn();
+    return $uid ? (int)$uid : null;
+}
+
+/* Anti-spam resend: true si on peut renvoyer un mail maintenant */
+public function canResendVerification(int $userId, int $cooldownSeconds = 60): bool
+{
+    $st = $this->bd->prepare("
+        SELECT sent_at FROM user_email_verifications
+        WHERE user_id = :uid
+        ORDER BY sent_at DESC
+        LIMIT 1
+    ");
+    $st->execute([':uid'=>$userId]);
+    $last = $st->fetchColumn();
+    if (!$last) return true;
+    return (time() - strtotime($last)) >= $cooldownSeconds;
+}
 
 }

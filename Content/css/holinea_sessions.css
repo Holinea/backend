@@ -1,0 +1,36 @@
+:root{
+    --navy:#111a3a; --bg:#f6f7fb; --card:#ffffff; --line:#e6e8f0;
+    --muted:#9aa3b2; --green:#33b27b; --green-2:#e6f7f0;
+    --orange:#ff8f6b; --orange-2:#ffe8df;
+  }
+  
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .settings-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .settings-head h1{font-size:22px;font-weight:900;margin:0}
+  .settings-head .spacer{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
+       background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800}
+  .btn.primary{background:linear-gradient(90deg,#5DBB9A,#7CD0B3);color:#fff;border:none}
+  .btn.dark{background:#131936;color:#fff;border-color:#131936}
+  .btn.icon-only{width:40px;height:40px;justify-content:center}
+  .btn-sm{height:36px;padding:0 12px;border-radius:10px}
+  
+  .settings-toolbar{display:flex;align-items:flex-end;gap:12px;margin:8px 0 16px;flex-wrap:wrap}
+  .field label{display:block;font-weight:800;margin-bottom:6px}
+  .field select{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fbfcff}
+  
+  table.sessions{width:100%;border-collapse:separate;border-spacing:0 10px}
+  table.sessions thead th{font-weight:900;color:#1d2340;border-bottom:2px solid var(--line);padding:10px 12px}
+  table.sessions tbody tr{background:#fff;border:1px solid var(--line);border-radius:12px}
+  table.sessions tbody td{padding:14px 12px;border-top:1px solid var(--line)}
+  table.sessions tbody tr td:first-child{border-left:1px solid var(--line);border-radius:12px 0 0 12px}
+  table.sessions tbody tr td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+  table.sessions .empty{padding:28px 12px;color:#4e5671;text-align:center}
+  
+  .avatar{width:36px;height:36px;border-radius:50%;object-fit:cover}
+  .text-right{text-align:right}
+  
+  .badge{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;font-weight:800}
+  .badge-ok{background:var(--green-2); color:#1c8e62; border:1px solid #d5f5e7}
+  .badge-warn{background:var(--orange-2); color:#9a3f24; border:1px solid #ffd8cc}
+  

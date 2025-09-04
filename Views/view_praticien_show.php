@@ -1,3 +1,4 @@
+
 <?php
 if (!function_exists('h')) {
   function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
@@ -55,7 +56,7 @@ $mail = $p['mail'] ?? ($p['mail_utilisateur'] ?? '');
 $site = $p['site_web'] ?? ''; // si tu as un champ site_web un jour
 ?>
 
-<?php require 'view_begin.php'; ?>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <link rel="stylesheet" href="./Content/css/holinea_profile.css"/>
 
@@ -226,5 +227,3 @@ document.getElementById('shareBtn')?.addEventListener('click', async () => {
   }
 });
 </script>
-
-<?php require 'view_end.php'; ?>

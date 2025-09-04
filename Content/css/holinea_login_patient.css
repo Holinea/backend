@@ -1,0 +1,67 @@
+:root{
+    --h-bleu:#15193a;
+    --h-orange:#f27c5a;
+    --h-bg-mask: rgba(255,255,255,.88);
+  }
+  
+  *{box-sizing:border-box}
+  body{margin:0; font-family:'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--h-bleu);}
+  
+  .login-hero{
+    min-height:100vh;
+    background: url('Content/img/bg-forest.jpg') center/cover no-repeat fixed;
+    display:flex; align-items:center; justify-content:center;
+    padding:32px;
+  }
+  
+  .login-card{
+    width:min(560px, 92vw);
+    background: var(--h-bg-mask);
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    padding: 36px 34px;
+    backdrop-filter: blur(2px);
+  }
+  
+  .login-card h1{
+    text-align:center; margin:0 0 18px; font-weight:800; letter-spacing:.2px;
+  }
+  
+  .alert{
+    background:#fff3f0; border:1px solid #f7c1b2; color:#a23517;
+    padding:10px 12px; border-radius:10px; margin-bottom:12px; font-weight:600;
+  }
+  
+  .login-form input{
+    width:100%; border:1px solid #e6e2da; border-radius:12px; padding:12px 14px;
+    font-size:15px; margin-bottom:14px; background:#fff;
+  }
+  .login-form input:focus{
+    outline: none; border-color:#ffc1ad; box-shadow:0 0 0 3px rgba(242,124,90,.18);
+  }
+  
+  .row-forgot{
+    display:flex; justify-content:flex-start; margin:4px 0 14px;
+  }
+  .link{ color:#0b5bd3; text-decoration:underline; font-weight:600; }
+  
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 18px; border-radius:12px; font-weight:800; cursor:pointer;
+    border:none; text-decoration:none;
+  }
+  .btn-primary{
+    width:100%;
+    background:#f27c5a; color:#fff;
+    box-shadow:0 10px 22px rgba(242,124,90,.28);
+  }
+  .btn-primary:hover{ filter:brightness(.98); transform:translateY(-1px); }
+  
+  .row-signup{
+    display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px;
+  }
+  .btn-secondary{
+    background:#15193a; color:#fff; padding:12px 22px; border-radius:16px;
+  }
+  .btn-secondary:hover{ filter:brightness(1.05); }
+  

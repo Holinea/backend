@@ -1,3 +1,6 @@
+<?php
+$active = 'clients';
+?>
 <?php require "view_begin_therapeute.php"; ?>
 
 <div class="container">

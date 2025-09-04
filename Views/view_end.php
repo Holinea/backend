@@ -19,5 +19,28 @@
     <p>&copy; 2025 Holinea • <a href="#">Mentions légales</a> • <a href="#">Contact</a></p>
   </div>
 </footer>
+<script>
+(function(){
+  const KEY = 'holinea_sidebar_collapsed';
+  const layout = document.querySelector('.layout');
+  const btn = document.querySelector('.collapse-btn');
+
+  const collapsed = localStorage.getItem(KEY) === '1';
+  if (collapsed) layout.classList.add('is-collapsed');
+  if (btn) btn.setAttribute('aria-expanded', (!collapsed).toString());
+
+  document.querySelectorAll('.menu .item').forEach(a=>{
+    const t = a.querySelector('.txt')?.textContent?.trim();
+    if (t) a.title = t;
+  });
+
+  btn && btn.addEventListener('click', ()=>{
+    const isCollapsed = layout.classList.toggle('is-collapsed');
+    localStorage.setItem(KEY, isCollapsed ? '1' : '0');
+    btn.setAttribute('aria-expanded', (!isCollapsed).toString());
+  });
+})();
+</script>
+
 </body>
 </html>

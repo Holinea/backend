@@ -152,4 +152,39 @@
     .ph-left{align-items:flex-start;}
     .ph-avatar{width:140px;height:140px;}
   }
-  
+  /* ====== Slots (extrait) en barres vertes ====== */
+.slots-green { display: grid; gap: 12px; margin: 8px 0 14px; }
+.slots-green .bar{
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--h-green);        /* #53b68d par défaut */
+  color: #fff; font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0,0,0,.06);
+}
+.slots-green .bar i{ opacity:.95; }
+
+/* CTA “Voir l’agenda complet” comme sur la maquette */
+.card.side .btn.primary.small{
+  background: #f27c5a;               /* orangé Holinea */
+  border-color: #f27c5a;
+  color:#fff; box-shadow: 0 4px 12px rgba(242,124,90,.25);
+}
+
+/* Titres et blocs du panneau latéral pour aérer comme la maquette */
+.card.side h2{ margin: 10px 0 8px; }
+.card.side p{ margin: 6px 0 12px; }
+
+/* Carte / plan : légère bordure pointillée et coins doux */
+.map-ph{
+  height: 120px;
+  background:#f7f7f7;
+  border:1px dashed #d9d9d9;
+  border-radius:12px;
+  margin:10px 0 18px;
+}
+
+/* Contacts : icônes bien visibles, liens bleu Holinea */
+.contacts li{ padding: 8px 0; }
+.contacts i{ color:#1f2a44; opacity:.9; }
+.contacts a{ color:#0b5bd3; text-decoration: underline; }

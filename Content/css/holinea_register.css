@@ -1,0 +1,131 @@
+:root{
+  --h-bleu:#0e1635;
+  --h-bleu-soft:#1c2553;
+  --h-orange:#f27c5a;
+  --h-jaune:#ffd447;
+  --h-bg:#faf8f3;
+  --h-white: #ffffff;
+  --h-line:#e8e5de;
+  --shadow: 0 20px 60px rgba(12,18,53,.25);
+  --shadow-soft: 0 8px 28px rgba(12,18,53,.15);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--h-bleu);
+}
+
+/* --- Bandeau visuel (image plein écran) --- */
+.reg-hero{
+  min-height:100vh;
+  background:url('Content/img/holinea_2.png') center/cover no-repeat fixed; /* remplace par ton image */
+  display:grid;
+  place-items:center;
+  padding:32px 16px;
+}
+
+/* --- Carte glassmorphism --- */
+.reg-card{
+  width:min(680px, 92vw);
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:24px;
+  box-shadow: var(--shadow);
+  padding:28px 28px 24px;
+}
+
+.reg-card h1{
+  margin:0 0 18px;
+  font-weight:800;
+  font-size:28px;
+}
+
+/* --- Form --- */
+.reg-form{display:flex;flex-direction:column;gap:14px}
+
+.field input{
+  width:100%;
+  height:48px;
+  padding:0 16px;
+  border:1px solid var(--h-line);
+  background:#fff;
+  border-radius:24px;
+  font-size:15px;
+  outline:none;
+  transition:.15s border-color,.15s box-shadow;
+}
+.field input::placeholder{color:#9aa3b2}
+.field input:focus{
+  border-color:#cfd7ff;
+  box-shadow:0 0 0 4px rgba(11,91,211,.12);
+}
+
+/* Upload style ligne avec icône */
+.upload{
+  display:flex;align-items:center;gap:10px;
+  font-weight:700;color:var(--h-bleu-soft);
+  cursor:pointer; user-select:none;
+  padding-top:4px;
+}
+.upload i{
+  width:28px;height:28px;border-radius:50%;
+  display:inline-grid;place-items:center;
+  background:#ecf0ff;color:#1e3dd9;
+}
+
+/* Checkboxes jolis */
+.check{
+  display:flex; gap:10px; align-items:flex-start;
+  font-size:13.5px; line-height:1.45; color:#2b3251;
+}
+.check input{
+  appearance:none; -webkit-appearance:none; width:18px;height:18px;
+  border:2px solid #aab0c6; border-radius:6px;
+  margin-top:2px; position:relative; outline:none; cursor:pointer;
+  background:#fff;
+  transition:.15s border-color,.15s background;
+}
+.check input:checked{
+  border-color:#49b38a; background:#49b38a;
+}
+.check input:checked::after{
+  content:""; position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/12px 12px no-repeat;
+}
+
+/* Boutons */
+.btn{
+  display:inline-flex; justify-content:center; align-items:center;
+  height:48px; border-radius:24px; font-weight:800;
+  text-decoration:none; border:none; cursor:pointer;
+  transition:transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+.btn:disabled{opacity:.65; cursor:not-allowed}
+
+/* orange -> jaune gradient */
+.btn-primary{
+  background:linear-gradient(90deg,#FF7A59,#F7C948);
+  color:#fff; box-shadow:0 8px 18px rgba(242,124,90,.25);
+  border:0;
+}
+.btn-primary:hover{ transform:translateY(-1px); filter:brightness(.98); }
+
+.btn-outline{
+  background:#fff; color:var(--h-bleu-soft);
+  border:2px solid var(--h-bleu-soft);
+}
+.btn-outline:hover{ transform:translateY(-1px); }
+
+/* espacement fin */
+.btn + .btn{margin-top:6px}
+
+/* Responsive */
+@media (max-width:560px){
+  .reg-card{padding:22px}
+  .reg-card h1{font-size:24px}
+}

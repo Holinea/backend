@@ -1,6 +1,7 @@
 <?php
 function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 ?>
+<?php require 'view_begin_therapeute.php'; ?>
 <link rel="stylesheet" href="./Content/css/holinea_clients.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
