@@ -1,0 +1,126 @@
+/* ====== Holinea – Login screen ====== */
+:root{
+    --h-bleu:#15193a;
+    --h-bleu-navy:#0f1330;
+    --h-orange:#f27c5a;
+    --h-orange-2:#f59a6f;
+    --h-jaune:#ffd447;
+    --h-bg:#faf8f3;
+    --h-white:#ffffff;
+  }
+  
+  *{box-sizing:border-box}
+  
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:var(--h-bleu);
+  }
+  
+  /* Background image full-screen with soft warm overlay */
+  .login-screen{
+    position:relative;
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    background:url("Content/img/bg-holinea-login.jpg") center/cover no-repeat fixed;
+  }
+  .login-screen::after{
+    content:"";
+    position:absolute; inset:0;
+    /* léger voile chaud pour lisibilité */
+    background:linear-gradient(180deg, rgba(255,244,230,.35), rgba(0,0,0,.12));
+    pointer-events:none;
+  }
+  
+  /* Card – frosted glass effect */
+  .login-card{
+    position:relative;
+    width:100%;
+    max-width:520px;
+    padding:34px 36px 28px;
+    border-radius:22px;
+    background:rgba(255,255,255,.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.18);
+    z-index:1;
+  }
+  
+  .login-title{
+    margin:0 0 18px;
+    text-align:center;
+    font-size:28px;
+    font-weight:800;
+    color:var(--h-bleu);
+  }
+  
+  /* Inputs */
+  .login-field{
+    width:100%;
+    display:block;
+    border:1px solid rgba(0,0,0,.08);
+    background:#fff;
+    border-radius:999px;            /* pill */
+    padding:12px 16px;
+    font-size:15px;
+    outline:none;
+    box-shadow: 0 3px 0 rgba(0,0,0,.02) inset;
+    transition:.18s ease;
+    margin:10px 0;
+  }
+  .login-field:focus{
+    border-color:#f3b596;
+    box-shadow:0 0 0 4px rgba(242,124,90,.18);
+  }
+  
+  /* small helper */
+  .login-hint{
+    font-size:13px;
+    color:#3a3f57;
+    margin:6px 8px 10px;
+  }
+  
+  /* Buttons row */
+  .login-actions{ display:flex; gap:14px; align-items:center; margin-top:8px; }
+  
+  /* Primary CTA (orange) */
+  .btn-primary{
+    flex:1;
+    border:none;
+    cursor:pointer;
+    border-radius:999px;
+    padding:12px 18px;
+    font-weight:800;
+    color:#fff;
+    background:linear-gradient(90deg, var(--h-orange), var(--h-orange-2));
+    box-shadow:0 10px 20px rgba(242,124,90,.28);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); filter:brightness(.98); }
+  
+  /* Secondary (navy) */
+  .btn-secondary{
+    min-width:170px;
+    border:none;
+    cursor:pointer;
+    border-radius:999px;
+    padding:12px 20px;
+    font-weight:800;
+    background:var(--h-bleu-navy);
+    color:#fff;
+    box-shadow:0 8px 18px rgba(15,19,48,.25);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .btn-secondary:hover{ transform:translateY(-1px); filter:brightness(1.05); }
+  
+  /* Tiny footer text */
+  .login-footer{
+    margin-top:10px;
+    font-size:14px;
+    color:#3a3f57;
+  }
+  

@@ -21,7 +21,7 @@ $isActive = function(string $slug) use ($active) {
     <button class="collapse-btn" aria-label="Replier la navigation" aria-expanded="true">
       <i class="fa-solid fa-bars"></i>
     </button>
-    <img src="./Content/img/logo-holinea.svg" alt="Holinea" />
+    <img src="./Content/img/holinea_2.png" alt="Holinea" />
   </div>
 
   <nav class="menu">

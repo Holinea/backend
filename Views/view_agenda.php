@@ -3,7 +3,7 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 $me = $me ?? [];
 $active = 'agenda';
 ?>
-<?php require 'view_begin_therapeute.php'; ?>
+
 <link rel="stylesheet" href="./Content/css/holinea_agenda.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
@@ -351,5 +351,3 @@ $('#markAllFree').onclick = async ()=>{
 // <button class="btn soft">Voir mes séances</button>
 </script>
 
-
-<?php require 'view_end.php'; ?>

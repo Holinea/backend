@@ -1,10 +1,10 @@
 <?php
 require_once 'Models/Model.php';
 
-
 class Controller_inscription extends Controller
 {
     public function action_register() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
         $this->render('patient_register', [
             'errors' => $_SESSION['flash_errors'] ?? [],
             'old'    => $_SESSION['flash_old']    ?? [],
@@ -13,10 +13,12 @@ class Controller_inscription extends Controller
     }
 
     public function action_register_submit() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?Controller=inscription&action=register'); exit;
         }
-    
+
         $email = trim($_POST['email'] ?? '');
         $nom   = trim($_POST['nom'] ?? '');
         $pre   = trim($_POST['prenom'] ?? '');
@@ -25,7 +27,7 @@ class Controller_inscription extends Controller
         $pass2 = $_POST['password_confirm'] ?? '';
         $cgu   = isset($_POST['agree_cgu']);
         $verif = isset($_POST['agree_truth']);
-    
+
         $errors = [];
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = "Email invalide.";
         if ($nom==='')   $errors['nom']   = "Nom requis.";
@@ -34,10 +36,10 @@ class Controller_inscription extends Controller
         if ($pass1 !== $pass2)  $errors['password_confirm'] = "La confirmation ne correspond pas.";
         if (!$cgu)  $errors['agree_cgu']   = "Vous devez accepter les CGU.";
         if (!$verif)$errors['agree_truth'] = "Vous attestez l'exactitude des informations.";
-    
+
         $m = Model::getModel();
         if ($m->userExists($email)) $errors['email'] = "Un compte existe déjà avec cet email.";
-    
+
         // Upload avatar
         $tmpAvatar = null;
         if (!empty($_FILES['avatar']['tmp_name']) && is_uploaded_file($_FILES['avatar']['tmp_name'])) {
@@ -50,15 +52,16 @@ class Controller_inscription extends Controller
                 move_uploaded_file($_FILES['avatar']['tmp_name'], $tmpAvatar);
             }
         }
-    
+
         if ($errors) {
             $_SESSION['flash_errors'] = $errors;
             $_SESSION['flash_old'] = [
-                'email'=>$email,'nom'=>$nom,'prenom'=>$pre,'telephone'=>$tel
+                'email'=>$email,'nom'=>$nom,'prenom'=>$pre,'telephone'=>$tel,
+                'agree_cgu'=>$cgu,'agree_truth'=>$verif
             ];
             header('Location: index.php?Controller=inscription&action=register'); exit;
         }
-    
+
         try {
             $idUser = $m->createPatientWithUser([
                 'mail'=>$email,'nom'=>$nom,'prenom'=>$pre,
@@ -70,12 +73,14 @@ class Controller_inscription extends Controller
             $_SESSION['flash_old'] = ['email'=>$email,'nom'=>$nom,'prenom'=>$pre,'telephone'=>$tel];
             header('Location: index.php?Controller=inscription&action=register'); exit;
         }
-    
-        // ✅ Au lieu de connecter directement → redirection vers la page de connexion patient
+
+        // ✅ Redirige vers la page de connexion après succès
         header('Location: index.php?Controller=connexion_patient&action=index');
         exit;
     }
-    
 
-    public function action_default(){ $this->action_register(); }
+    // 🔹 Implémentation de la méthode obligatoire
+    public function action_default() {
+        $this->action_register();
+    }
 }

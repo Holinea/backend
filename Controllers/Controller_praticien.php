@@ -19,7 +19,7 @@ class Controller_praticien extends Controller
 
         $this->render("praticien_show", [
             'pageTitle'   => trim(($p['prenom'] ?? '').' '.($p['nom'] ?? '')).' - Profil',
-            'p'           => $p,                     // <<< clé 'p' pour la vue
+            'p'           => $p,                     
             'approches'   => $model->getApprochesByPraticien($id)   ?: [],
             'specialites' => $model->getSpecialitesByPraticien($id) ?: [],
             'dispos'      => $model->getDisposExtrait($id)          ?: [],

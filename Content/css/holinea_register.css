@@ -115,11 +115,14 @@ body{
 }
 .btn-primary:hover{ transform:translateY(-1px); filter:brightness(.98); }
 
-.btn-outline{
-  background:#fff; color:var(--h-bleu-soft);
-  border:2px solid var(--h-bleu-soft);
+.btn.btn-outline {
+  background: #fff;
+  color: var(--h-bleu-soft);
+  border: 2px solid var(--h-bleu-soft);
 }
-.btn-outline:hover{ transform:translateY(-1px); }
+
+
+
 
 /* espacement fin */
 .btn + .btn{margin-top:6px}

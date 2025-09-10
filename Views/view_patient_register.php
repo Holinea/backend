@@ -3,8 +3,6 @@
 // Views/patient_register.php
 if (!function_exists('h')) { function h($s){return htmlspecialchars($s??'',ENT_QUOTES,'UTF-8');} }
 ?>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <link rel="stylesheet" href="./Content/css/holinea_register.css"/>
 
 <div class="reg-hero">

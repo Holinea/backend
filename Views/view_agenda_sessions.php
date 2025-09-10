@@ -2,12 +2,42 @@
 function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 $me = $me ?? [];  $scope = $scope ?? 'day';
 ?>
-<?php require 'view_begin_therapeute.php'; ?>
+
 <link rel="stylesheet" href="./Content/css/holinea_agenda.css">
 <link rel="stylesheet" href="./Content/css/holinea_sessions.css">
 
+
 <div class="layout agenda-layout" style="grid-template-columns:72px 1fr">
-  <?php require __DIR__.'/partials/sidebar.php'; ?>
+<aside class="sidebar">
+    <div class="brand">
+      <button class="collapse-btn" aria-label="Replier la navigation" aria-expanded="true">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <img src="./Content/img/logo-holinea.svg" alt="Holinea" />
+    </div>
+
+    <nav class="menu">
+      <a href="index.php?Controller=clients&action=index" class="item">
+        <i class="fa-solid fa-users"></i> <span class="txt">Mes clients</span>
+      </a>
+      <a href="index.php?Controller=agenda&action=index" class="item active">
+        <i class="fa-solid fa-calendar"></i> <span class="txt">Agenda</span>
+      </a>
+      <a href="#" class="item"><i class="fa-solid fa-chart-line"></i> <span class="txt">Mes Statistiques</span></a>
+      <a href="#" class="item"><i class="fa-solid fa-message"></i> <span class="txt">Messagerie</span></a>
+      <a href="index.php?Controller=agenda&action=settings" class="item"><i class="fa-solid fa-gear"></i> <span class="txt">Paramètres</span></a>
+    </nav>
+
+    <div class="sidebar-cta">
+      <div class="me">
+        <img src="<?= h($me['avatar'] ?? 'Content/img/avatar.png') ?>" class="me-avatar" alt="">
+        <div class="me-meta">
+          <div class="me-name"><?= h($me['name'] ?? '—') ?></div>
+          <div class="me-role"><?= h($me['role'] ?? '') ?></div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <main class="content card settings-main">
     <header class="settings-head">
@@ -113,4 +143,4 @@ $me = $me ?? [];  $scope = $scope ?? 'day';
   </main>
 </div>
 
-<?php require 'view_end.php'; ?>
+

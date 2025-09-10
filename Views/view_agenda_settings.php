@@ -7,7 +7,7 @@ $active = 'agenda';
 
 ?>
 
-<?php require 'view_begin_therapeute.php'; ?>
+
 <link rel="stylesheet" href="./Content/css/holinea_agenda.css">
 <link rel="stylesheet" href="./Content/css/holinea_agenda_settings.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -107,4 +107,3 @@ $active = 'agenda';
   </main>
 </div>
 
-<?php require 'view_end.php'; ?>
